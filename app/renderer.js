@@ -59,4 +59,4 @@ window.desktop.onMediaUpdate(part=>{media={...media,...part};$('waveStatus').tex
 let checkboxFocus;
 document.querySelectorAll('input[type=checkbox]').forEach(el=>el.tabIndex=-1);
 document.addEventListener('pointerdown',e=>{const label=e.target.closest('label');const box=e.target.matches('input[type=checkbox]')?e.target:label?.querySelector('input[type=checkbox]');if(box){checkboxFocus=document.activeElement;e.preventDefault();}},true);
-document.addEventListener('click',e=>{if(e.target.matches('input[type=checkbox]')&&checkboxFocus){const previous=checkboxFocus;checkboxFocus=null;queueMicrotask(()=>previous?.focus({preventScroll:true}));}},true);
+document.addEventListener('click',e=>{const label=e.target.closest('label'),box=label?.querySelector('input[type=checkbox]');if(box&&e.target!==box){e.preventDefault();box.click();return;}if(e.target.matches('input[type=checkbox]')&&checkboxFocus){const previous=checkboxFocus;checkboxFocus=null;queueMicrotask(()=>previous?.focus({preventScroll:true}));}},true);
