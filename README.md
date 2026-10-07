@@ -115,3 +115,9 @@ FFmpeg 的 GPL 许可证、对应源码及构建信息见随包第三方声明�
 菜单「帮助 → 检查版本更新」检查 GitHub 最新正式 Release，后台下载并校验 SHA-512，切割任务结束后自动安装并重启。安装版使用 electron-updater/NSIS；免安装版使用隐藏 PowerShell 进程替换原 exe（目录必须可写）。下载失败保持当前版本。更新保留 config.json 和记录。旧版没有更新入口，需要先手动下载此版本，之后即可使用菜单更新。
 
 Release 必须同时发布 latest.yml、Setup.exe、blockmap、portable-update.json 和 Portable.exe。所有复选框退出 Tab 顺序，鼠标点击（包括标签）保留原焦点。
+
+## v1.5.1 文本容错与布局
+
+切割时自动清理两行末尾多余逗号，不忽略行中间的空条目。复制与切割按钮并排，状态提示固定在播放器左上方；调整四个主要区域的留白与分区。
+
+每次发布必须新增 `release-notes/v<package.json版本>.md`，写明本版本修改。Actions 在打包前检查说明文件，创建或更新 Release 时通过 `--notes-file` 使用该文件。

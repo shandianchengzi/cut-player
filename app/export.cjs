@@ -1,5 +1,6 @@
-const path=require('node:path');
+const {normalizeNotes}=require('./model.cjs');
 function parsePlan(text,duration){
+ text=normalizeNotes(text);
  const m=/^breakpoints:([^\n]*)\r?\nnames:([^\n]*)\s*$/.exec(text);
  if(!m)throw Error('文本必须为 breakpoints 与 names 两行');
  const raw=m[1].trim()?m[1].trim().split(','):[];

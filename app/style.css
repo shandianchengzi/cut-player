@@ -9,3 +9,15 @@ input[type=checkbox]{width:auto}button:disabled{opacity:.5;cursor:wait}aside lab
 body.dragging .player{outline:2px dashed #80b5ff;outline-offset:8px}
 
 .play-controls{display:flex;gap:12px;align-items:center;padding-top:10px}.play-controls #seekBar{flex:1;width:auto}.play-controls #volumeBar{width:80px}.play-controls input{padding:0;accent-color:#80b5ff}
+
+/* Keep the workspace compact and the current result in view. */
+header{height:64px;padding:16px 22px;gap:16px}header span{color:#99a9c0;font-size:13px}
+main{height:calc(100vh - 64px);padding:18px;gap:18px;grid-template-columns:minmax(0,1.8fr) minmax(310px,1fr);min-height:540px}
+.player{background:#141d2b;border:1px solid #29374b;border-radius:14px;padding:14px;min-height:0;overflow:hidden}
+#message{flex:none;margin:0 0 12px;padding:10px 12px;min-height:38px;max-height:90px;overflow:auto;background:#243249;border:1px solid #405572;border-radius:8px;color:#ffdcab;font-size:13px;line-height:1.5}
+.file-toolbar{flex:none;margin-bottom:10px;gap:10px}.file-toolbar button{padding:8px 12px;white-space:nowrap}#name{font-size:12px;color:#b0bfd3}
+.player video{min-height:100px;border-radius:9px}.play-controls{gap:10px;padding-top:9px}.play-controls button{padding:7px 12px}
+#wavePanel{flex:none;margin:12px 0 10px;padding:10px;background:#101827;border:1px solid #29374b;border-radius:10px}#wave{height:88px}.wave-controls{gap:8px;flex-wrap:wrap}.wave-controls label{font-size:12px;white-space:nowrap}#zoomInfo{display:block;margin-top:5px}
+.player>.toolbar:not(.file-toolbar){margin:0;gap:10px}#clock{font-variant-numeric:tabular-nums;color:#d3e4ff}#rate{padding:3px 8px;background:#25344d;border-radius:5px;font-size:12px}#stamp{padding:8px 12px}.player>p{font-size:11px;margin-top:10px}
+aside{gap:14px;min-height:0}.notes-panel,.names-panel{padding:14px;border:1px solid #29374b;border-radius:14px;background:#141d2b;min-height:0}.notes-panel{flex:3;gap:12px}.names-panel{flex:2;gap:10px}.notes-panel textarea{padding:12px;font-size:13px;line-height:1.65;min-height:100px}.notes-panel small,.names-panel small{font-size:11px;line-height:1.6}.notes-toolbar{gap:10px}.note-actions{display:flex;gap:8px;margin-left:auto;flex:none}.note-actions button{padding:8px 14px;margin:0!important;white-space:nowrap}#export{background:#32639b;border-color:#5186bf}#export:hover{background:#4079b7}.names-panel .toolbar button{padding:8px 12px}.name-list button{background:#202e43;border-color:#344963;font-size:12px}
+@media(max-width:950px){main{padding:12px;gap:12px;grid-template-columns:minmax(0,1.5fr) 310px}.player,.notes-panel,.names-panel{padding:11px}header span{display:none}.player>p{font-size:10px}}
