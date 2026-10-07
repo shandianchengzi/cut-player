@@ -7,6 +7,7 @@ app.whenReady().then(()=>{
  const configPath=path.join(app.getPath('userData'),'config.json');
  let state={audio:true};try{state=JSON.parse(fs.readFileSync(configPath,'utf8'));}catch{}
  if(state.config)state.config=upgradeConfig(state.config);
+ if(state.seekDefaultVersion!==2){if(state.config?.seek===5)state.config.seek=1;state.seekDefaultVersion=2;}
  function save(){fs.mkdirSync(path.dirname(configPath),{recursive:true});fs.writeFileSync(configPath+'.tmp',JSON.stringify(state,null,2));fs.renameSync(configPath+'.tmp',configPath);}
  const ffmpeg=app.isPackaged?path.join(process.resourcesPath,'ffmpeg','ffmpeg.exe'):require('ffmpeg-static');
  const ffprobe=app.isPackaged?path.join(process.resourcesPath,'ffmpeg','ffprobe.exe'):path.join(path.dirname(ffmpeg),'ffprobe.exe');
