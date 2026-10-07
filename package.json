@@ -1,1 +1,40 @@
-{"name":"cut-player","version":"1.0.0","description":"Windows video timestamp notebook","author":"shandianchengzi","license":"MIT","main":"app/main.cjs","scripts":{"start":"electron .","test":"node --test","dist":"electron-builder --win --x64"},"devDependencies":{"electron":"^38.0.0","electron-builder":"^26.0.12"},"build":{"appId":"io.github.shandianchengzi.cutplayer","productName":"Cut Player","files":["app/**/*","package.json"],"win":{"target":["nsis","portable"],"artifactName":"Cut-Player-${version}-${arch}-${target}.${ext}"},"nsis":{"oneClick":false,"allowToChangeInstallationDirectory":true},"publish":null}}
+{
+  "name": "cut-player",
+  "version": "1.0.0",
+  "description": "Windows video timestamp notebook",
+  "author": "shandianchengzi",
+  "license": "MIT",
+  "main": "app/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test",
+    "dist": "electron-builder --win --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "io.github.shandianchengzi.cutplayer",
+    "productName": "Cut Player",
+    "files": [
+      "app/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Cut-Player-${version}-${arch}-Setup.${ext}"
+    },
+    "publish": null,
+    "portable": {
+      "artifactName": "Cut-Player-${version}-${arch}-Portable.${ext}"
+    }
+  }
+}
