@@ -2,7 +2,7 @@ name: Windows Release
 on:
   push:
     branches: [main]
-    paths: ['app/**', 'test/**', 'package*.json', '.github/workflows/release.yml']
+    paths: ['app/**', 'test/**', 'scripts/**', 'package*.json', '.github/workflows/release.yml']
   workflow_dispatch:
 permissions:
   contents: write
@@ -20,13 +20,19 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - name: Desktop playback and keyboard smoke test
+        run: |
+          New-Item -ItemType Directory -Force dist
+          node scripts/smoke.cjs
       - run: npm run dist
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
       - uses: actions/upload-artifact@v4
         with:
           name: windows-x64
-          path: dist/*.exe
+          path: |
+            dist/*.exe
+            dist/app-check.png
           if-no-files-found: error
       - name: Publish versioned release
         shell: pwsh
