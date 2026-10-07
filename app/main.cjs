@@ -29,8 +29,12 @@ app.whenReady().then(()=>{
    const plan=parsePlan(text,duration);const audioCodec=/Audio:\s*([\w]+)/.exec(info)?.[1];const audio=state.audio;
    let parent=process.env.CUT_PLAYER_TEST_OUTPUT;
    if(!parent){const choice=await dialog.showOpenDialog(win,{title:'选择片段输出目录',properties:['openDirectory','createDirectory']});if(choice.canceled)return {canceled:true};parent=choice.filePaths[0];}
-   folder=fs.mkdtempSync(path.join(parent,'Cut-Player-'));
+   folder=parent;
    const ext=path.extname(input).toLowerCase()||'.mp4';let audioCount=0;
+   const targets=plan.flatMap(part=>[path.join(folder,part.name+ext),...(audio&&audioCodec?[path.join(folder,part.name+(audioCodec==='aac'?'.aac':'.mka'))]:[])]);
+   if(targets.some(target=>path.resolve(target).toLowerCase()===path.resolve(input).toLowerCase()))throw Error('输出文件与源视频重名，请修改 names 或选择其他目录');
+   const existing=targets.filter(target=>fs.existsSync(target));if(existing.length){const choice=await dialog.showMessageBox(win,{type:'question',buttons:['取消','覆盖'],defaultId:0,cancelId:0,message:`所选目录有 ${existing.length} 个同名文件，是否覆盖？`});if(choice.response!==1)return {canceled:true};}
+
    for(let i=0;i<plan.length;i++){
     const part=plan[i],output=path.join(folder,part.name+ext);
     win.webContents.send('export-progress',`正在导出 ${i+1}/${plan.length}：${part.name}`);
