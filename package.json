@@ -1,6 +1,6 @@
 {
   "name": "cut-player",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Windows video timestamp notebook",
   "author": "shandianchengzi",
   "license": "MIT",
@@ -58,6 +58,10 @@
       {
         "from": "node_modules/ffmpeg-static/ffmpeg.exe.README",
         "to": "ffmpeg/FFmpeg-README"
+      },
+      {
+        "from": "node_modules/ffmpeg-static/ffprobe.exe",
+        "to": "ffmpeg/ffprobe.exe"
       }
     ]
   }

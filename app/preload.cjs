@@ -1,5 +1,6 @@
 const {contextBridge,ipcRenderer,webUtils}=require('electron');
 contextBridge.exposeInMainWorld('desktop',{
+ analyze:()=>ipcRenderer.invoke('analyze-media'),
  copy:text=>ipcRenderer.invoke('copy-text',text),
  loadConfig:()=>ipcRenderer.invoke('load-config'),
  saveConfig:patch=>ipcRenderer.invoke('save-config',patch),

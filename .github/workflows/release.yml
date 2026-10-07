@@ -19,6 +19,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Fetch matching embedded frame analyzer
+        shell: pwsh
+        run: |
+          Invoke-WebRequest 'https://github.com/eugeneware/ffmpeg-static/releases/download/b6.1.1/ffprobe-win32-x64' -OutFile node_modules/ffmpeg-static/ffprobe.exe
       - run: npm test
       - name: Desktop playback and keyboard smoke test
         run: |

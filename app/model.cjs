@@ -22,24 +22,25 @@ function calendarSource(prefix,digits,suffix,dji){
  if(d.getUTCFullYear()!==parts[0]||d.getUTCMonth()+1!==parts[1]||d.getUTCDate()!==parts[2]||d.getUTCHours()!==parts[3]||d.getUTCMinutes()!==parts[4]||d.getUTCSeconds()!==parts[5])return {kind:'plain',stem:prefix+digits+suffix};
  return {kind:'calendar',base,prefix,suffix,dji};
 }
-function segmentName(source,seconds=0){
+function segmentName(source,seconds=0,fine=false){
+ if(fine){const base=source.kind==='calendar'?source.base-8*3600000:source.base;if(Number.isFinite(base))return source.prefix+String(base+Math.round(seconds*1000))+source.suffix+'x';return source.stem+'_'+Math.round(seconds*1000)+'x';}
  const offset=Math.floor(seconds)*1000;
  if(source.kind==='unix')return source.prefix+String(Math.floor((source.base+offset)/source.scale)).padStart(source.width,'0')+source.suffix+'x';
  if(source.kind==='calendar'){const d=new Date(source.base+offset);const a=[d.getUTCFullYear(),d.getUTCMonth()+1,d.getUTCDate(),d.getUTCHours(),d.getUTCMinutes(),d.getUTCSeconds()].map((n,i)=>String(n).padStart(i===0?4:2,'0'));return source.prefix+a.slice(0,3).join('')+(source.dji?'':'_')+a.slice(3).join('')+source.suffix+'x';}
  return source.stem+(seconds?'_'+breakpointTime(seconds).replaceAll(':',''):'')+'x';
 }
-function breakpointTime(seconds){const n=Math.floor(seconds);return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');}
+function breakpointTime(seconds,fine=false){if(fine){const ms=Math.round(seconds*1000);return String(Math.floor(ms/60000)).padStart(2,'0')+':'+String(Math.floor(ms/1000)%60).padStart(2,'0')+'.'+String(ms%1000).padStart(3,'0');}const n=Math.floor(seconds);return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');}
 function initialNotes(source){return 'breakpoints:\nnames:'+segmentName(source);}
-function appendBreakpoint(text,source,seconds){
+function appendBreakpoint(text,source,seconds,fine=false){
  const m=/^breakpoints:([^\n]*)\r?\nnames:([^\n]*)\s*$/.exec(text);
  if(!m)throw Error('文本须为 breakpoints 和 names 两行。');
  const points=m[1].trim()?m[1].trim().split(',').map(x=>x.trim()):[];
  const names=m[2].trim().split(',').map(x=>x.trim());
  if(names.length!==points.length+1||names.some(x=>!x))throw Error('names 数量必须比 breakpoints 多一个。');
- const times=points.map(x=>{const t=/^(\d+):([0-5]\d)$/.exec(x);if(!t)throw Error('断点格式须为 MM:SS。');return Number(t[1])*60+Number(t[2]);});
+ const times=points.map(x=>{const t=/^(\d+):([0-5]\d)(?:\.(\d{3}))?$/.exec(x);if(!t)throw Error('断点格式须为 MM:SS。');return Number(t[1])*60+Number(t[2])+Number(t[3]||0)/1000;});
  if(times.some((x,i)=>x<=0||(i&&x<=times[i-1])))throw Error('断点须按时间递增。');
- const n=Math.floor(seconds);if(!Number.isFinite(n)||n<=0||(times.length&&n<=times.at(-1)))throw Error('新断点须晚于已有断点，且不能为 00:00。');
- points.push(breakpointTime(n));names.push(segmentName(source,n));return 'breakpoints:'+points.join(',')+'\nnames:'+names.join(',');
+ const n=fine?Math.round(seconds*1000)/1000:Math.floor(seconds);if(!Number.isFinite(n)||n<=0||(times.length&&n<=times.at(-1)))throw Error('新断点须晚于已有断点，且不能为 00:00。');
+ points.push(breakpointTime(n,fine));names.push(segmentName(source,n,fine));return 'breakpoints:'+points.join(',')+'\nnames:'+names.join(',');
 }
 if(typeof module!=='undefined')Object.assign(module.exports,{sourceName,segmentName,breakpointTime,initialNotes,appendBreakpoint});
 
@@ -47,3 +48,7 @@ function upgradeConfig(s){if(!s||!s.keys)return s;const next={...s,keys:{...s.ke
 function importNames(text,mode,separator=''){if(typeof text!=='string'||text.length>200000)throw Error('导入文本过长');if(mode==='custom'&&!separator)throw Error('请输入自定义分隔符');const parts=mode==='space'?text.split(/\s+/):text.split(mode==='comma'?',':separator);const names=[...new Set(parts.map(x=>x.trim()).filter(Boolean))];if(!names.length)throw Error('未找到名称');if(names.length>2000)throw Error('最多导入 2000 个名称');if(names.some(x=>/[\r\n,]/.test(x)))throw Error('名称不能包含逗号或换行，请调整分隔符');return names;}
 function replaceName(text,index,name){const m=/^breakpoints:([^\n]*)\r?\nnames:([^\n]*)\s*$/.exec(text);if(!m)throw Error('文本须为 breakpoints 与 names 两行');const names=m[2].split(',').map(x=>x.trim());const points=m[1].trim()?m[1].split(','):[];if(names.length!==points.length+1)throw Error('names 数量必须比 breakpoints 多一个');if(!Number.isInteger(index)||index<0||index>=names.length)throw Error('请选择需要修改的片段');if(!name||/[\r\n,]/.test(name))throw Error('名称不能包含逗号或换行');names[index]=name;return 'breakpoints:'+m[1].trim()+'\nnames:'+names.join(',');}
 if(typeof module!=='undefined')Object.assign(module.exports,{upgradeConfig,importNames,replaceName});
+
+function frameAt(frames,time,direction=0){if(!frames.length)return time;let low=0,high=frames.length;while(low<high){const mid=(low+high)>>1;if(frames[mid]<time-0.00001)low=mid+1;else high=mid;}if(direction<0)return frames[Math.max(0,low-1)];if(direction>0)return frames[Math.min(frames.length-1,low+(Math.abs((frames[low]??Infinity)-time)<.00001?1:0))];return frames[Math.max(0,Math.min(frames.length-1,low))];}
+function precisionNotes(text,source){const m=/^breakpoints:([^\n]*)\r?\nnames:([^\n]*)\s*$/.exec(text);if(!m)return text;const raw=m[1].trim()?m[1].split(','):[];const times=raw.map(t=>{const a=/^(\d+):([0-5]\d)(?:\.(\d{3}))?$/.exec(t.trim());return a?Number(a[1])*60+Number(a[2])+Number(a[3]||0)/1000:NaN;});const names=m[2].split(',');if(names.length!==times.length+1||times.some(t=>!Number.isFinite(t)))return text;[0,...times].forEach((t,i)=>{if(names[i].trim()===segmentName(source,t))names[i]=segmentName(source,t,true);});return 'breakpoints:'+times.map(t=>breakpointTime(t,true)).join(',')+'\nnames:'+names.join(',');}
+if(typeof module!=='undefined')Object.assign(module.exports,{frameAt,precisionNotes});
