@@ -1,0 +1,5 @@
+const defaults={keys:{stamp:'Ctrl+Alt+V',copy:'Ctrl+Alt+C',up:'ArrowUp',down:'ArrowDown',back:'ArrowLeft',forward:'ArrowRight',speed0:'1',speed1:'2',speed2:'3',speed3:'4'},speeds:[1,2,4,16],seek:5,volume:5};
+function chord(e){let key=e.key; if(['Control','Alt','Shift','Meta'].includes(key))return ''; if(key.length===1)key=key.toUpperCase();return [e.ctrlKey?'Ctrl':'',e.altKey?'Alt':'',e.shiftKey?'Shift':'',e.metaKey?'Meta':'',key].filter(Boolean).join('+');}
+function format(seconds){let ms=Math.floor(Math.max(0,seconds)*1000);return [Math.floor(ms/3600000),Math.floor(ms/60000)%60,Math.floor(ms/1000)%60].map(x=>String(x).padStart(2,'0')).join(':')+'.'+String(ms%1000).padStart(3,'0');}
+function validate(s){return s && Array.isArray(s.speeds)&&s.speeds.length===4&&s.speeds.every(x=>Number.isFinite(x)&&x>=0.25&&x<=16)&&Number.isFinite(s.seek)&&s.seek>0&&s.seek<=600&&Number.isFinite(s.volume)&&s.volume>0&&s.volume<=100&&Object.keys(defaults.keys).every(k=>typeof s.keys?.[k]==='string'&&s.keys[k].length>0)&&new Set(Object.values(s.keys)).size===10;}
+if(typeof module!=='undefined')module.exports={defaults,chord,format,validate};

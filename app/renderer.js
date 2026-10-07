@@ -1,0 +1,19 @@
+const $=id=>document.getElementById(id),v=$('video'),notes=$('notes');
+let cfg=structuredClone(defaults),url;
+try{const saved=JSON.parse(localStorage.getItem('config'));if(validate(saved))cfg=saved;notes.value=localStorage.getItem('notes')||'';}catch{}
+function say(s){$('message').textContent=s;}
+function persist(){localStorage.setItem('notes',notes.value);}
+notes.addEventListener('input',persist);
+$('open').onclick=()=>$('file').click();
+$('file').onchange=()=>{const f=$('file').files[0];if(!f)return;if(notes.value.trim()&&!confirm('打开新视频会重置右侧记录，是否继续？')){$('file').value='';return;}v.pause();if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(f);v.src=url;v.playbackRate=1;notes.value=f.name;persist();$('name').textContent=f.name;say('视频已打开');};
+v.addEventListener('error',()=>say('无法播放该编码。请使用 H.264/AAC 的 MP4 或兼容的 WebM 文件。'));
+v.addEventListener('timeupdate',()=>$('clock').textContent=format(v.currentTime));v.addEventListener('ratechange',()=>$('rate').textContent=v.playbackRate+'×');
+function stamp(){if(!v.src||!Number.isFinite(v.duration)){say('请先打开可播放的视频');return;}notes.value+=(notes.value.endsWith('\n')||!notes.value?'':'\n')+format(v.currentTime)+'\n';notes.scrollTop=notes.scrollHeight;persist();say('已记录 '+format(v.currentTime));}
+async function copy(){try{await window.desktop.copy(notes.value);say('已复制全部记录');}catch{say('复制失败，请手动选择文本复制');}}
+$('stamp').onclick=stamp;$('copy').onclick=copy;
+function act(k){if(k==='stamp')return stamp();if(k==='copy')return copy();if(!v.src)return;if(k==='up'||k==='down'){v.muted=false;v.volume=Math.min(1,Math.max(0,v.volume+(k==='up'?1:-1)*cfg.volume/100));say('音量 '+Math.round(v.volume*100)+'%');}else if(k==='back'||k==='forward'){if(Number.isFinite(v.duration))v.currentTime=Math.min(v.duration,Math.max(0,v.currentTime+(k==='forward'?1:-1)*cfg.seek));}else if(k.startsWith('speed'))v.playbackRate=cfg.speeds[Number(k.slice(-1))];}
+document.addEventListener('keydown',e=>{if($('dialog').open)return;const key=chord(e),entry=Object.entries(cfg.keys).find(([,value])=>value===key);if(!entry)return;const typing=e.target.matches('textarea,input,[contenteditable=true]');if(typing&&!['copy','stamp'].includes(entry[0]))return;e.preventDefault();if(e.repeat&&['copy','stamp'].includes(entry[0]))return;act(entry[0]);});
+const labels={stamp:'记录当前时间',copy:'复制全部记录',up:'增加音量',down:'降低音量',back:'快退',forward:'快进',speed0:'倍速档 1',speed1:'倍速档 2',speed2:'倍速档 3',speed3:'倍速档 4'};
+function fill(s){$('fields').replaceChildren();for(const [k,title]of Object.entries(labels)){const row=document.createElement('label'),label=document.createElement('span'),input=document.createElement('input');label.textContent=title;input.value=s.keys[k];input.readOnly=true;input.dataset.key=k;input.setAttribute('aria-label',title+'快捷键');input.onkeydown=e=>{e.preventDefault();const c=chord(e);if(c)input.value=c;};row.append(label,input);if(k.startsWith('speed')){const rate=document.createElement('input');rate.type='number';rate.min='.25';rate.max='16';rate.step='.25';rate.value=s.speeds[Number(k.slice(-1))];rate.dataset.speed=k.slice(-1);rate.setAttribute('aria-label',title+'速度');row.append(rate);} $('fields').append(row);} $('seek').value=s.seek;$('volume').value=s.volume;$('configError').textContent='';}
+$('settings').onclick=()=>{fill(cfg);$('dialog').showModal();};$('cancel').onclick=()=>$('dialog').close();$('reset').onclick=()=>fill(defaults);
+$('config').onsubmit=e=>{e.preventDefault();const s={keys:{},speeds:[],seek:Number($('seek').value),volume:Number($('volume').value)};document.querySelectorAll('[data-key]').forEach(i=>s.keys[i.dataset.key]=i.value);document.querySelectorAll('[data-speed]').forEach(i=>s.speeds[Number(i.dataset.speed)]=Number(i.value));if(!validate(s)){$('configError').textContent='快捷键不能重复；倍速须为 0.25—16，步长须在有效范围内。';return;}cfg=s;localStorage.setItem('config',JSON.stringify(cfg));$('dialog').close();say('设置已保存');};
