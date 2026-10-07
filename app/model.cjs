@@ -1,7 +1,7 @@
-const defaults={keys:{stamp:'Ctrl+Alt+V',copy:'Ctrl+Alt+C',up:'ArrowUp',down:'ArrowDown',back:'ArrowLeft',forward:'ArrowRight',speed0:'1',speed1:'2',speed2:'3',speed3:'4'},speeds:[1,2,4,16],seek:5,volume:5};
-function chord(e){let key=e.key; if(['Control','Alt','Shift','Meta'].includes(key))return ''; if(key.length===1)key=key.toUpperCase();return [e.ctrlKey?'Ctrl':'',e.altKey?'Alt':'',e.shiftKey?'Shift':'',e.metaKey?'Meta':'',key].filter(Boolean).join('+');}
+const defaults={keys:{toggle:'Space',stamp:'Ctrl+Alt+V',copy:'Ctrl+Alt+C',up:'ArrowUp',down:'ArrowDown',back:'ArrowLeft',forward:'ArrowRight',speed0:'1',speed1:'2',speed2:'3',speed3:'4'},speeds:[1,2,4,16],seek:5,volume:5};
+function chord(e){let key=e.key;if(key===' ')key='Space'; if(['Control','Alt','Shift','Meta'].includes(key))return ''; if(key.length===1)key=key.toUpperCase();return [e.ctrlKey?'Ctrl':'',e.altKey?'Alt':'',e.shiftKey?'Shift':'',e.metaKey?'Meta':'',key].filter(Boolean).join('+');}
 function format(seconds){let ms=Math.floor(Math.max(0,seconds)*1000);return [Math.floor(ms/3600000),Math.floor(ms/60000)%60,Math.floor(ms/1000)%60].map(x=>String(x).padStart(2,'0')).join(':')+'.'+String(ms%1000).padStart(3,'0');}
-function validate(s){return s && Array.isArray(s.speeds)&&s.speeds.length===4&&s.speeds.every(x=>Number.isFinite(x)&&x>=0.25&&x<=16)&&Number.isFinite(s.seek)&&s.seek>0&&s.seek<=600&&Number.isFinite(s.volume)&&s.volume>0&&s.volume<=100&&Object.keys(defaults.keys).every(k=>typeof s.keys?.[k]==='string'&&s.keys[k].length>0)&&new Set(Object.values(s.keys)).size===10;}
+function validate(s){return s && Array.isArray(s.speeds)&&s.speeds.length===4&&s.speeds.every(x=>Number.isFinite(x)&&x>=0.25&&x<=16)&&Number.isFinite(s.seek)&&s.seek>0&&s.seek<=600&&Number.isFinite(s.volume)&&s.volume>0&&s.volume<=100&&Object.keys(defaults.keys).every(k=>typeof s.keys?.[k]==='string'&&s.keys[k].length>0)&&new Set(Object.values(s.keys)).size===Object.keys(defaults.keys).length;}
 if(typeof module!=='undefined')module.exports={defaults,chord,format,validate};
 
 // Calendar filenames retain their written local wall time; Unix values are absolute milliseconds/seconds.
@@ -42,3 +42,8 @@ function appendBreakpoint(text,source,seconds){
  points.push(breakpointTime(n));names.push(segmentName(source,n));return 'breakpoints:'+points.join(',')+'\nnames:'+names.join(',');
 }
 if(typeof module!=='undefined')Object.assign(module.exports,{sourceName,segmentName,breakpointTime,initialNotes,appendBreakpoint});
+
+function upgradeConfig(s){if(!s||!s.keys)return s;const next={...s,keys:{...s.keys}};if(!next.keys.toggle)next.keys.toggle=['Space','P','Ctrl+Space','Ctrl+Alt+P'].find(k=>!Object.values(next.keys).includes(k));return next;}
+function importNames(text,mode,separator=''){if(typeof text!=='string'||text.length>200000)throw Error('导入文本过长');if(mode==='custom'&&!separator)throw Error('请输入自定义分隔符');const parts=mode==='space'?text.split(/\s+/):text.split(mode==='comma'?',':separator);const names=[...new Set(parts.map(x=>x.trim()).filter(Boolean))];if(!names.length)throw Error('未找到名称');if(names.length>2000)throw Error('最多导入 2000 个名称');if(names.some(x=>/[\r\n,]/.test(x)))throw Error('名称不能包含逗号或换行，请调整分隔符');return names;}
+function replaceName(text,index,name){const m=/^breakpoints:([^\n]*)\r?\nnames:([^\n]*)\s*$/.exec(text);if(!m)throw Error('文本须为 breakpoints 与 names 两行');const names=m[2].split(',').map(x=>x.trim());const points=m[1].trim()?m[1].split(','):[];if(names.length!==points.length+1)throw Error('names 数量必须比 breakpoints 多一个');if(!Number.isInteger(index)||index<0||index>=names.length)throw Error('请选择需要修改的片段');if(!name||/[\r\n,]/.test(name))throw Error('名称不能包含逗号或换行');names[index]=name;return 'breakpoints:'+m[1].trim()+'\nnames:'+names.join(',');}
+if(typeof module!=='undefined')Object.assign(module.exports,{upgradeConfig,importNames,replaceName});

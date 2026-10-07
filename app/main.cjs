@@ -1,11 +1,12 @@
 const {app,BrowserWindow,ipcMain,clipboard,dialog}=require('electron');
 const path=require('node:path'),fs=require('node:fs'),{spawn}=require('node:child_process');
-const {validate}=require('./model.cjs'),{parsePlan,videoArgs,audioArgs}=require('./export.cjs');
+const {validate,upgradeConfig}=require('./model.cjs'),{parsePlan,videoArgs,audioArgs}=require('./export.cjs');
 if(process.env.CUT_PLAYER_TEST_PROFILE)app.setPath('userData',process.env.CUT_PLAYER_TEST_PROFILE);
 let activeChild;
 app.whenReady().then(()=>{
  const configPath=path.join(app.getPath('userData'),'config.json');
  let state={audio:true};try{state=JSON.parse(fs.readFileSync(configPath,'utf8'));}catch{}
+ if(state.config)state.config=upgradeConfig(state.config);
  function save(){fs.mkdirSync(path.dirname(configPath),{recursive:true});fs.writeFileSync(configPath+'.tmp',JSON.stringify(state,null,2));fs.renameSync(configPath+'.tmp',configPath);}
  const ffmpeg=app.isPackaged?path.join(process.resourcesPath,'ffmpeg','ffmpeg.exe'):require('ffmpeg-static');
  const win=new BrowserWindow({width:1180,height:760,minWidth:850,minHeight:560,backgroundColor:'#10151f',webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
@@ -14,7 +15,7 @@ app.whenReady().then(()=>{
  function handle(channel,fn){ipcMain.handle(channel,(e,...args)=>{if(e.sender!==win.webContents)throw Error('无效调用');return fn(...args);});}
  handle('copy-text',text=>{if(typeof text==='string')clipboard.writeText(text);});
  handle('load-config',()=>({...state,path:configPath}));
- handle('save-config',patch=>{if(patch.config!==undefined){if(!validate(patch.config))throw Error('配置无效');state.config=patch.config;}if(typeof patch.audio==='boolean')state.audio=patch.audio;save();return true;});
+ handle('save-config',patch=>{if(patch.config!==undefined){if(!validate(patch.config))throw Error('配置无效');state.config=patch.config;}if(patch.nameList!==undefined){if(!Array.isArray(patch.nameList)||patch.nameList.length>2000||patch.nameList.some(x=>typeof x!=='string'||x.length>200000||/[\r\n,]/.test(x)))throw Error('名称列表无效');state.nameList=patch.nameList;}if(typeof patch.audio==='boolean')state.audio=patch.audio;save();return true;});
  handle('set-input',file=>{if(busy)throw Error('请等待导出完成');if(typeof file!=='string'||!fs.statSync(file).isFile())throw Error('视频路径无效');input=file;return true;});
  function run(args,probe=false){return new Promise((resolve,reject)=>{let log='';const child=spawn(ffmpeg,args,{windowsHide:true,shell:false,stdio:['ignore','ignore','pipe']});activeChild=child;child.stderr.on('data',chunk=>log=(log+chunk.toString()).slice(-24000));child.once('error',reject);child.once('close',code=>{activeChild=undefined;if(code===0||probe)resolve(log);else reject(Error('FFmpeg 导出失败：'+log.slice(-1800)));});});}
  handle('export-segments',async text=>{
