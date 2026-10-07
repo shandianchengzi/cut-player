@@ -1,6 +1,6 @@
 {
   "name": "cut-player",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "Windows video timestamp notebook",
   "author": "shandianchengzi",
   "license": "MIT",
@@ -25,8 +25,7 @@
     ],
     "win": {
       "target": [
-        "nsis",
-        "portable"
+        "nsis"
       ]
     },
     "nsis": {
@@ -38,9 +37,6 @@
       "provider": "github",
       "owner": "shandianchengzi",
       "repo": "cut-player"
-    },
-    "portable": {
-      "artifactName": "Cut-Player-${version}-${arch}-Portable.${ext}"
     },
     "extraResources": [
       {

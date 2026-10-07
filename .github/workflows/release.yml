@@ -36,11 +36,23 @@ jobs:
       - run: npm run dist
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-      - run: node scripts/update-metadata.cjs
       - name: Verify bundled executable and FFmpeg
         run: |
           $env:CUT_PLAYER_PACKAGED_EXE = Join-Path $PWD 'dist/win-unpacked/Cut Player.exe'
           node scripts/smoke.cjs
+      - name: Verify actual NSIS installation
+        shell: pwsh
+        run: |
+          $version = node -p "require('./package.json').version"
+          $installer = Join-Path $PWD "dist/Cut-Player-$version-x64-Setup.exe"
+          $installDir = Join-Path $env:RUNNER_TEMP 'cut-player-installed'
+          $result = Start-Process -FilePath $installer -ArgumentList '/S',"/D=$installDir" -PassThru -Wait
+          if ($result.ExitCode -ne 0) { throw "Installer exit code $($result.ExitCode)" }
+          $env:CUT_PLAYER_PACKAGED_EXE = Join-Path $installDir 'Cut Player.exe'
+          if (!(Test-Path $env:CUT_PLAYER_PACKAGED_EXE)) { throw 'Installed executable missing' }
+          if (!(Test-Path (Join-Path $installDir 'resources/app-update.yml'))) { throw 'Installed updater configuration missing' }
+          node scripts/smoke.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Installed application smoke test failed' }
       - uses: actions/upload-artifact@v4
         with:
           name: windows-x64
@@ -48,7 +60,6 @@ jobs:
             dist/*.exe
             dist/*.yml
             dist/*.blockmap
-            dist/portable-update.json
             dist/app-check.png
           if-no-files-found: error
       - name: Publish versioned release
@@ -65,7 +76,7 @@ jobs:
           }
           gh release edit $tag --repo $env:GITHUB_REPOSITORY --notes-file "release-notes/v$version.md"
           if ($LASTEXITCODE -ne 0) { throw 'Release notes update failed' }
-          Get-ChildItem dist/* | Where-Object { $_.Name -like '*.exe' -or $_.Name -like '*.blockmap' -or $_.Name -eq 'latest.yml' -or $_.Name -eq 'portable-update.json' } | ForEach-Object {
+          Get-ChildItem dist/* | Where-Object { $_.Name -like '*.exe' -or $_.Name -like '*.blockmap' -or $_.Name -eq 'latest.yml' } | ForEach-Object {
             gh release upload $tag $_.FullName --repo $env:GITHUB_REPOSITORY --clobber
             if ($LASTEXITCODE -ne 0) { throw 'Release upload failed' }
           }

@@ -1,3 +1,5 @@
+> 当前版本仅发布 Windows NSIS 安装版（Setup.exe）。便携版已停止发布，其旧版自替换更新不可靠；旧便携版用户请手动安装 Setup.exe 并从新建快捷方式启动。配置与记录沿用原来的本机数据目录。下方旧版本说明保留作为历史记录。
+
 # Cut Player
 
 Windows 视频时间记录小工具：[介绍与下载](https://shandianchengzi.github.io/cut-player/) · [Release](https://github.com/shandianchengzi/cut-player/releases/latest)
@@ -121,3 +123,9 @@ Release 必须同时发布 latest.yml、Setup.exe、blockmap、portable-update.j
 切割时自动清理两行末尾多余逗号，不忽略行中间的空条目。复制与切割按钮并排，状态提示固定在播放器左上方；调整四个主要区域的留白与分区。
 
 每次发布必须新增 `release-notes/v<package.json版本>.md`，写明本版本修改。Actions 在打包前检查说明文件，创建或更新 Release 时通过 `--notes-file` 使用该文件。
+
+## v1.5.3 停止便携版发布
+
+移除便携 exe 的 PowerShell 自替换更新，仅保留 electron-updater/NSIS 安装版更新。更新过程日志写入 userData 下的 updates.log，失败后可以重新检查。CI 除验证解包程序外，还实际静默安装 Setup.exe 并对安装后的程序运行播放、切割和界面测试。
+
+旧便携版内的更新逻辑无法远程修复，请手动下载 Setup.exe 安装版；安装后使用新的桌面/开始菜单快捷方式，不要再次打开旧便携 exe。不要删除原 AppData 数据目录，配置和记录会沿用。
