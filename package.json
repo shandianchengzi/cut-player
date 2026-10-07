@@ -1,6 +1,6 @@
 {
   "name": "cut-player",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "description": "Windows video timestamp notebook",
   "author": "shandianchengzi",
   "license": "MIT",
@@ -34,7 +34,11 @@
       "allowToChangeInstallationDirectory": true,
       "artifactName": "Cut-Player-${version}-${arch}-Setup.${ext}"
     },
-    "publish": null,
+    "publish": {
+      "provider": "github",
+      "owner": "shandianchengzi",
+      "repo": "cut-player"
+    },
     "portable": {
       "artifactName": "Cut-Player-${version}-${arch}-Portable.${ext}"
     },
@@ -64,5 +68,8 @@
         "to": "ffmpeg/ffprobe.exe"
       }
     ]
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
   }
 }

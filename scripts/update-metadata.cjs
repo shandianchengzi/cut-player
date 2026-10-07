@@ -1,0 +1,1 @@
+const fs=require('node:fs'),crypto=require('node:crypto');const {version}=require('../package.json');const file=`Cut-Player-${version}-x64-Portable.exe`;fs.writeFileSync('dist/portable-update.json',JSON.stringify({version,file,sha512:crypto.createHash('sha512').update(fs.readFileSync('dist/'+file)).digest('hex')},null,2));

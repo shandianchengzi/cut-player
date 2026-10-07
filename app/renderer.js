@@ -52,3 +52,11 @@ $('fine').onchange=async()=>{if($('fine').checked){v.pause();if(source){notes.va
 canvas.addEventListener('wheel',e=>{e.preventDefault();const {span,duration}=waveRange();zoomSpan=Math.max(.05,Math.min(duration,span*(e.deltaY<0?.75:1/.75)));drawWave();},{passive:false});
 canvas.onclick=e=>{if(!Number.isFinite(v.duration))return;const {start,span}=waveRange();let t=start+(e.clientX-canvas.getBoundingClientRect().left)/canvas.clientWidth*span;if($('fine').checked){if(!media.frames.length)return;t=frameAt(media.frames,t);}v.pause();v.currentTime=t;drawWave();};
 v.addEventListener('timeupdate',drawWave);v.addEventListener('loadedmetadata',drawWave);notes.addEventListener('input',drawWave);new ResizeObserver(drawWave).observe(canvas);
+
+window.desktop.onUpdateState(say);
+window.desktop.onMediaUpdate(part=>{media={...media,...part};$('waveStatus').textContent=`${media.peaks.length?'音量波形就绪':'正在分析音量波形…'} · ${media.frames.length?'逐帧就绪':'正在读取帧时间…'}`;drawWave();});
+// Checkboxes toggle with the mouse without stealing focus, including label clicks.
+let checkboxFocus;
+document.querySelectorAll('input[type=checkbox]').forEach(el=>el.tabIndex=-1);
+document.addEventListener('pointerdown',e=>{const label=e.target.closest('label');const box=e.target.matches('input[type=checkbox]')?e.target:label?.querySelector('input[type=checkbox]');if(box){checkboxFocus=document.activeElement;e.preventDefault();}},true);
+document.addEventListener('click',e=>{if(e.target.matches('input[type=checkbox]')&&checkboxFocus){const previous=checkboxFocus;checkboxFocus=null;queueMicrotask(()=>previous?.focus({preventScroll:true}));}},true);
