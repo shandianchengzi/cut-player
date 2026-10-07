@@ -1,6 +1,6 @@
 {
   "name": "cut-player",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Windows video timestamp notebook",
   "author": "shandianchengzi",
   "license": "MIT",
@@ -13,6 +13,7 @@
   "devDependencies": {
     "electron": "^38.0.0",
     "electron-builder": "^26.0.12",
+    "ffmpeg-static": "5.3.0",
     "playwright-core": "^1.63.0"
   },
   "build": {
@@ -36,6 +37,28 @@
     "publish": null,
     "portable": {
       "artifactName": "Cut-Player-${version}-${arch}-Portable.${ext}"
-    }
+    },
+    "extraResources": [
+      {
+        "from": "node_modules/ffmpeg-static/ffmpeg.exe",
+        "to": "ffmpeg/ffmpeg.exe"
+      },
+      {
+        "from": "node_modules/ffmpeg-static/LICENSE",
+        "to": "ffmpeg/LICENSE"
+      },
+      {
+        "from": "THIRD_PARTY_NOTICES.md",
+        "to": "ffmpeg/THIRD_PARTY_NOTICES.md"
+      },
+      {
+        "from": "node_modules/ffmpeg-static/ffmpeg.exe.LICENSE",
+        "to": "ffmpeg/FFmpeg-LICENSE"
+      },
+      {
+        "from": "node_modules/ffmpeg-static/ffmpeg.exe.README",
+        "to": "ffmpeg/FFmpeg-README"
+      }
+    ]
   }
 }
