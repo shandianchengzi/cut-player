@@ -1,14 +1,14 @@
 const $=id=>document.getElementById(id),v=$('video'),notes=$('notes');
-let cfg=structuredClone(defaults),url;
+let cfg=structuredClone(defaults),url,source;
 try{const saved=JSON.parse(localStorage.getItem('config'));if(validate(saved))cfg=saved;notes.value=localStorage.getItem('notes')||'';}catch{}
 function say(s){$('message').textContent=s;}
 function persist(){localStorage.setItem('notes',notes.value);}
 notes.addEventListener('input',persist);
 $('open').onclick=()=>$('file').click();
-$('file').onchange=()=>{const f=$('file').files[0];if(!f)return;if(notes.value.trim()&&!confirm('打开新视频会重置右侧记录，是否继续？')){$('file').value='';return;}v.pause();if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(f);v.src=url;v.playbackRate=1;notes.value=f.name;persist();$('name').textContent=f.name;say('视频已打开');};
+$('file').onchange=()=>{const f=$('file').files[0];if(!f)return;if(notes.value.trim()&&!confirm('打开新视频会重置右侧记录，是否继续？')){$('file').value='';return;}v.pause();if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(f);v.src=url;v.playbackRate=1;source=sourceName(f.name);notes.value=initialNotes(source);persist();$('name').textContent=f.name;say('视频已打开');};
 v.addEventListener('error',()=>say('无法播放该编码。请使用 H.264/AAC 的 MP4 或兼容的 WebM 文件。'));
 v.addEventListener('timeupdate',()=>$('clock').textContent=format(v.currentTime));v.addEventListener('ratechange',()=>$('rate').textContent=v.playbackRate+'×');
-function stamp(){if(!v.src||!Number.isFinite(v.duration)){say('请先打开可播放的视频');return;}notes.value+=(notes.value.endsWith('\n')||!notes.value?'':'\n')+format(v.currentTime)+'\n';notes.scrollTop=notes.scrollHeight;persist();say('已记录 '+format(v.currentTime));}
+function stamp(){if(!v.src||!Number.isFinite(v.duration)){say('请先打开可播放的视频');return;}try{notes.value=appendBreakpoint(notes.value,source,v.currentTime);notes.scrollTop=notes.scrollHeight;persist();say('已记录 '+breakpointTime(v.currentTime));}catch(e){say(e.message);}}
 async function copy(){try{await window.desktop.copy(notes.value);say('已复制全部记录');}catch{say('复制失败，请手动选择文本复制');}}
 $('stamp').onclick=stamp;$('copy').onclick=copy;
 function act(k){if(k==='stamp')return stamp();if(k==='copy')return copy();if(!v.src)return;if(k==='up'||k==='down'){v.muted=false;v.volume=Math.min(1,Math.max(0,v.volume+(k==='up'?1:-1)*cfg.volume/100));say('音量 '+Math.round(v.volume*100)+'%');}else if(k==='back'||k==='forward'){if(Number.isFinite(v.duration))v.currentTime=Math.min(v.duration,Math.max(0,v.currentTime+(k==='forward'?1:-1)*cfg.seek));}else if(k.startsWith('speed'))v.playbackRate=cfg.speeds[Number(k.slice(-1))];}
