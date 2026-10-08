@@ -55,3 +55,20 @@ function precisionNotes(text,source){text=normalizeNotes(text);const m=/^breakpo
 if(typeof module!=='undefined')Object.assign(module.exports,{frameAt,precisionNotes});
 
 if(typeof module!=='undefined')Object.assign(module.exports,{normalizeNotes});
+
+function editableSegments(text){
+ const m=/^breakpoints:([^\n]*)\r?\nnames:([^\n]*)\s*$/.exec(normalizeNotes(text));
+ if(!m)throw Error('文本须为 breakpoints 与 names 两行；可用初始化恢复格式。');
+ const points=m[1].trim()?m[1].split(',').map(x=>x.trim()):[],names=m[2].split(',').map(x=>x.trim());
+ if(names.some(x=>!x)||names.length!==points.length+1)throw Error('names 数量必须比 breakpoints 多一个；可用初始化恢复格式。');
+ let previous=0;for(const point of points){const a=/^(\d+):([0-5]\d)(?:\.(\d{3}))?$/.exec(point);const t=a?Number(a[1])*60+Number(a[2])+Number(a[3]||0)/1000:NaN;if(!Number.isFinite(t)||t<=previous)throw Error('断点须为按时间递增的 MM:SS 或 MM:SS.mmm。');previous=t;}
+ return {points,names};
+}
+function deleteSegment(text,index){
+ const {points,names}=editableSegments(text);
+ if(!Number.isInteger(index)||index<0||index>=names.length)throw Error('请选择需要删除的片段');
+ if(names.length===1)throw Error('仅剩一个片段，请使用初始化恢复记录。');
+ names.splice(index,1);points.splice(index===0?0:index-1,1);
+ return 'breakpoints:'+points.join(',')+'\nnames:'+names.join(',');
+}
+if(typeof module!=='undefined')Object.assign(module.exports,{editableSegments,deleteSegment});
