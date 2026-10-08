@@ -72,3 +72,6 @@ function deleteSegment(text,index){
  return 'breakpoints:'+points.join(',')+'\nnames:'+names.join(',');
 }
 if(typeof module!=='undefined')Object.assign(module.exports,{editableSegments,deleteSegment});
+
+const defaultNameList=Object.freeze(["开场", "修星星的人", "Try Everything", "串场1 Talk", "光亮", "若梦", "浮光", "借过一下", "串场2 动画", "请我不改＋警报", "来啊", "达拉崩吧", "记忆商店串烧", "串场3 动画", "化身孤岛的鲸", "花开忘忧", "串场4 Talk", "北京限定曲", "小美满＋总有美好在路上", "灯火里的中国", "串场5 Talk", "邓丽君组曲", "串场6 动画", "和光同尘", "云裳羽衣曲", "怜悯", "望", "璀璨冒险人", "串场7 Talk", "奇迹时刻", "好运来", "接财运", "吉量", "想见到气血满满的你", "Wala li longla", "少管我", "点歌1", "点歌2", "感谢工作人员", "我以渺小爱你", "串场8 动画", "起风了", "大鱼", "难忘今宵", "退场"]);
+if(typeof module!=='undefined')Object.assign(module.exports,{defaultNameList});
