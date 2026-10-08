@@ -5,7 +5,12 @@ function say(s){$('message').textContent=s;}
 function persist(){localStorage.setItem('notes',notes.value);}
 notes.addEventListener('input',persist);
 $('open').onclick=()=>$('file').click();
-async function openVideo(f){if(!f)return;if($('export').disabled){say('请等待切割完成');return;}if(notes.value.trim()&&!confirm('打开新视频会重置右侧记录，是否继续？')){$('file').value='';return;}try{await window.desktop.setInput(f);}catch(e){say(e.message);return;}v.pause();if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(f);v.src=url;v.playbackRate=1;source=sourceName(f.name);notes.value=initialNotes(source);persist();$('name').textContent=f.name;say('视频已打开');loadAnalysis();}
+function confirmVideoReset(){
+ const dialog=$('openConfirm');
+ if(dialog.open)return Promise.resolve(false);
+ return new Promise(resolve=>{dialog.addEventListener('close',()=>resolve(dialog.returnValue==='open'),{once:true});dialog.returnValue='cancel';dialog.showModal();});
+}
+async function openVideo(f){if(!f)return;if($('export').disabled){say('请等待切割完成');return;}if(notes.value.trim()&&!await confirmVideoReset()){$('file').value='';return;}try{await window.desktop.setInput(f);}catch(e){say(e.message);return;}v.pause();if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(f);v.src=url;v.playbackRate=1;source=sourceName(f.name);notes.value=initialNotes(source);persist();$('name').textContent=f.name;say('视频已打开');loadAnalysis();}
 $('file').onchange=()=>openVideo($('file').files[0]);
 document.addEventListener('dragover',e=>{if(e.dataTransfer?.types.includes('Files')){e.preventDefault();e.dataTransfer.dropEffect='copy';document.body.classList.add('dragging');}});
 document.addEventListener('dragleave',e=>{if(!e.relatedTarget)document.body.classList.remove('dragging');});
@@ -18,8 +23,8 @@ async function copy(){try{await window.desktop.copy(notes.value);say('已复制�
 $('stamp').onclick=stamp;$('copy').onclick=copy;
 function act(k){if(k==='stamp')return stamp();if(k==='copy')return copy();if(!v.src)return;if(k==='toggle'){v.focus();if(v.paused)v.play().catch(e=>say(e.message));else v.pause();return;}if(k==='up'||k==='down'){v.muted=false;v.volume=Math.min(1,Math.max(0,v.volume+(k==='up'?1:-1)*cfg.volume/100));say('音量 '+Math.round(v.volume*100)+'%');}else if(k==='back'||k==='forward'){if($('fine').checked){if(!media.frames.length){say('帧时间轴尚未准备好');return;}v.pause();v.currentTime=frameAt(media.frames,v.currentTime,k==='forward'?1:-1);return;}if(Number.isFinite(v.duration))v.currentTime=Math.min(v.duration,Math.max(0,v.currentTime+(k==='forward'?1:-1)*cfg.seek));}else if(k.startsWith('speed'))v.playbackRate=cfg.speeds[Number(k.slice(-1))];}
 let pendingToggleCode;
-document.addEventListener('keydown',e=>{if($('dialog').open||$('importDialog').open)return;const key=chord(e),entry=Object.entries(cfg.keys).find(([,value])=>value===key);if(!entry)return;const typing=e.target.matches('textarea,input:not([type=range]),[contenteditable=true]');if(typing&&!['copy','stamp'].includes(entry[0]))return;e.preventDefault();e.stopImmediatePropagation();if(entry[0]==='toggle'){if(!e.repeat)pendingToggleCode=e.code;return;}if(e.repeat&&['copy','stamp','back','forward'].includes(entry[0]))return;act(entry[0]);},true);
-document.addEventListener('keyup',e=>{if(!pendingToggleCode||e.code!==pendingToggleCode)return;pendingToggleCode=undefined;e.preventDefault();e.stopImmediatePropagation();if($('dialog').open||$('importDialog').open||e.target.matches('textarea,input:not([type=range]),[contenteditable=true]'))return;act('toggle');},true);
+document.addEventListener('keydown',e=>{if($('dialog').open||$('importDialog').open||$('openConfirm').open)return;const key=chord(e),entry=Object.entries(cfg.keys).find(([,value])=>value===key);if(!entry)return;const typing=e.target.matches('textarea,input:not([type=range]),[contenteditable=true]');if(typing&&!['copy','stamp'].includes(entry[0]))return;e.preventDefault();e.stopImmediatePropagation();if(entry[0]==='toggle'){if(!e.repeat)pendingToggleCode=e.code;return;}if(e.repeat&&['copy','stamp','back','forward'].includes(entry[0]))return;act(entry[0]);},true);
+document.addEventListener('keyup',e=>{if(!pendingToggleCode||e.code!==pendingToggleCode)return;pendingToggleCode=undefined;e.preventDefault();e.stopImmediatePropagation();if($('dialog').open||$('importDialog').open||$('openConfirm').open||e.target.matches('textarea,input:not([type=range]),[contenteditable=true]'))return;act('toggle');},true);
 window.addEventListener('blur',()=>{pendingToggleCode=undefined;});
 $('playToggle').onpointerdown=e=>{e.preventDefault();v.focus();};$('playToggle').onclick=()=>act('toggle');v.onclick=()=>act('toggle');
 function syncControls(){$('playToggle').textContent=v.paused?'播放':'暂停';$('seekBar').max=Number.isFinite(v.duration)?v.duration:1;$('seekBar').value=v.currentTime;$('volumeBar').value=v.muted?0:v.volume;$('clock').textContent=format(v.currentTime);$('duration').textContent=format(Number.isFinite(v.duration)?v.duration:0);}
