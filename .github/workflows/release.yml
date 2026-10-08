@@ -6,12 +6,17 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+  pages: write
+  id-token: write
 concurrency:
   group: windows-release
   cancel-in-progress: false
 jobs:
   build:
     runs-on: windows-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -80,3 +85,18 @@ jobs:
             gh release upload $tag $_.FullName --repo $env:GITHUB_REPOSITORY --clobber
             if ($LASTEXITCODE -ne 0) { throw 'Release upload failed' }
           }
+
+      - name: Prepare independent Pages update downloads
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force docs/updates
+          Copy-Item dist/*-Setup.exe docs/updates/
+          Copy-Item dist/latest.yml docs/updates/latest.yml
+          $installer = (Get-ChildItem docs/updates/*-Setup.exe).Name
+          Set-Content docs/updates/index.html "<html lang='zh-CN'><meta charset='utf-8'><title>Cut Player 下载</title><h1>Cut Player 最新安装版</h1><a href='$installer'>下载安装包</a><p>下载后关闭播放器，运行安装包覆盖安装。配置保留。</p></html>" -Encoding utf8
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - uses: actions/deploy-pages@v4
+        id: deployment
