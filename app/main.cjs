@@ -32,18 +32,18 @@ app.whenReady().then(()=>{
    let parent=process.env.CUT_PLAYER_TEST_OUTPUT;
    if(!parent){const choice=await dialog.showOpenDialog(win,{title:'选择片段输出目录',properties:['openDirectory','createDirectory']});if(choice.canceled)return {canceled:true};parent=choice.filePaths[0];}
    folder=parent;
-   const ext=path.extname(input).toLowerCase()||'.mp4';let audioCount=0;
+   const ext=path.extname(input).toLowerCase()||'.mp4';let audioCount=0,videoBytes=0;const sourceBytes=fs.statSync(input).size;const size=n=>n>=1073741824?(n/1073741824).toFixed(2)+' GB':(n/1048576).toFixed(2)+' MB';
    const targets=plan.flatMap(part=>[path.join(folder,part.name+ext),...(audio&&audioCodec?[path.join(folder,part.name+(audioCodec==='aac'?'.aac':'.mka'))]:[])]);
    if(targets.some(target=>path.resolve(target).toLowerCase()===path.resolve(input).toLowerCase()))throw Error('输出文件与源视频重名，请修改 names 或选择其他目录');
    const existing=targets.filter(target=>fs.existsSync(target));if(existing.length){const choice=await dialog.showMessageBox(win,{type:'question',buttons:['取消','覆盖'],defaultId:0,cancelId:0,message:`所选目录有 ${existing.length} 个同名文件，是否覆盖？`});if(choice.response!==1)return {canceled:true};}
 
    for(let i=0;i<plan.length;i++){
     const part=plan[i],output=path.join(folder,part.name+ext);
-    win.webContents.send('export-progress',`正在导出 ${i+1}/${plan.length}：${part.name}`);
-    await run(videoArgs(input,part,output));
+    win.webContents.send('export-progress',`正在导出 ${i+1}/${plan.length}：${part.name} · 已导出视频 ${size(videoBytes)} / 原视频 ${size(sourceBytes)}`);
+    await run(videoArgs(input,part,output));videoBytes+=fs.statSync(output).size;win.webContents.send('export-progress',`已导出视频 ${i+1}/${plan.length} · 视频总大小 ${size(videoBytes)} / 原视频 ${size(sourceBytes)}`);
     if(audio&&audioCodec){const audioOutput=path.join(folder,part.name+(audioCodec==='aac'?'.aac':'.mka'));await run(audioArgs(output,audioOutput));audioCount++;}
    }
-   return {folder,count:plan.length,audioCount,noAudio:audio&&!audioCodec};
+   return {folder,count:plan.length,audioCount,videoBytes,sourceBytes,noAudio:audio&&!audioCodec};
   }catch(e){if(folder)e.message+='\n已完成或未完成的文件保留在：'+folder;throw e;}finally{busy=false;}
  });
  win.on('close',e=>{if(busy){e.preventDefault();dialog.showMessageBox(win,{type:'info',message:'正在导出，请等待任务结束后关闭。'});}});

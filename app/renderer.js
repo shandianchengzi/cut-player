@@ -1,6 +1,7 @@
 const $=id=>document.getElementById(id),v=$('video'),notes=$('notes');
 let cfg=structuredClone(defaults),url,source;
 try{const saved=upgradeConfig(JSON.parse(localStorage.getItem('config')));if(validate(saved)){if(saved.seek===5)saved.seek=1;cfg=saved;}notes.value=localStorage.getItem('notes')||'';}catch{}
+function fileSize(n){return n>=1073741824?(n/1073741824).toFixed(2)+' GB':(n/1048576).toFixed(2)+' MB';}
 function say(s){$('message').textContent=s;}
 function persist(){localStorage.setItem('notes',notes.value);}
 notes.addEventListener('input',persist);
@@ -41,7 +42,7 @@ const ready=window.desktop.loadConfig().then(async saved=>{const migrated=upgrad
 $('settings').disabled=true;ready.finally(()=>$('settings').disabled=false);
 $('audio').onchange=async()=>{try{await window.desktop.saveConfig({audio:$('audio').checked});}catch(e){say('设置保存失败：'+e.message);}};
 window.desktop.onProgress(say);
-$('export').onclick=async()=>{await ready;const controls=[$('export'),$('open'),$('audio')];controls.forEach(x=>x.disabled=true);try{notes.value=normalizeNotes(notes.value);persist();await window.desktop.saveConfig({audio:$('audio').checked});const result=await window.desktop.exportSegments(notes.value);say(result.canceled?'已取消导出':`已导出 ${result.count} 段视频、${result.audioCount} 段音频。目录：${result.folder}`+(result.noAudio?'（原视频无音轨）':''));}catch(e){say(e.message);}finally{controls.forEach(x=>x.disabled=false);}};
+$('export').onclick=async()=>{await ready;const controls=[$('export'),$('open'),$('audio')];controls.forEach(x=>x.disabled=true);try{notes.value=normalizeNotes(notes.value);persist();await window.desktop.saveConfig({audio:$('audio').checked});const result=await window.desktop.exportSegments(notes.value);say(result.canceled?'已取消导出':`已导出 ${result.count} 段视频、${result.audioCount} 段音频。视频总大小 ${fileSize(result.videoBytes)} / 原视频 ${fileSize(result.sourceBytes)}。目录：${result.folder}`+(result.noAudio?'（原视频无音轨）':''));}catch(e){say(e.message);}finally{controls.forEach(x=>x.disabled=false);}};
 
 let nameList=[];
 function renderNameList(){$('nameList').replaceChildren();if(!nameList.length){const hint=document.createElement('small');hint.textContent='导入名称后，会在这里显示可点击的按钮。';$('nameList').append(hint);}for(const name of nameList){const b=document.createElement('button');b.type='button';b.textContent=name;b.onpointerdown=e=>e.preventDefault();b.onclick=()=>{const caret=notes.selectionStart;notes.setRangeText(name,caret,caret,'end');persist();notes.focus();say('已粘贴名称');};$('nameList').append(b);}}
