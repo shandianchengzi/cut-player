@@ -11,7 +11,7 @@ function confirmVideoReset(){
  if(dialog.open)return Promise.resolve(false);
  return new Promise(resolve=>{dialog.addEventListener('close',()=>resolve(dialog.returnValue==='open'),{once:true});dialog.returnValue='cancel';dialog.showModal();});
 }
-async function openVideo(f){if(!f)return;if($('export').disabled){say('请等待切割完成');return;}if(notes.value.trim()&&!await confirmVideoReset()){$('file').value='';return;}try{await window.desktop.setInput(f);}catch(e){say(e.message);return;}v.pause();if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(f);v.src=url;v.playbackRate=1;source=sourceName(f.name);notes.value=initialNotes(source);persist();$('name').textContent=f.name;say('视频已打开');loadAnalysis();}
+async function openVideo(f){if(!f)return;if($('export').disabled){say('请等待切割完成');return;}if(notes.value.trim()&&!await confirmVideoReset()){$('file').value='';return;}let selected;try{selected=await window.desktop.setInput(f);}catch(e){say(e.message);return;}v.pause();v.src=selected.url;v.playbackRate=1;source=sourceName(selected.name);notes.value=initialNotes(source);persist();$('name').textContent=selected.name;say('视频已打开');loadAnalysis();}
 $('file').onchange=()=>openVideo($('file').files[0]);
 document.addEventListener('dragover',e=>{if(e.dataTransfer?.types.includes('Files')){e.preventDefault();e.dataTransfer.dropEffect='copy';document.body.classList.add('dragging');}});
 document.addEventListener('dragleave',e=>{if(!e.relatedTarget)document.body.classList.remove('dragging');});
@@ -85,3 +85,7 @@ $('initialize').onclick=()=>{if(!source){say('请先打开视频');return;}$('in
 $('initializeDialog').addEventListener('close',()=>{if($('initializeDialog').returnValue!=='initialize')return;notes.value=initialNotes(source);if($('fine').checked)notes.value=precisionNotes(notes.value,source);persist();drawWave();notes.focus();say('已恢复当前视频初始记录');});
 
 $('restoreNames').onclick=async()=>{try{const list=[...defaultNameList];await window.desktop.saveConfig({nameList:list});nameList=list;renderNameList();$('importText').value=list.join('\n');$('delimiter').value='space';$('customRow').hidden=true;$('importDialog').close();say('已恢复默认演唱会名称列表');}catch(e){$('importError').textContent=e.message;}};
+
+let externalOpenQueue=Promise.resolve();
+function receiveOpenFiles(){externalOpenQueue=externalOpenQueue.then(async()=>{await ready;for(const file of await window.desktop.takeOpenFiles())await openVideo(file);}).catch(e=>say('打开视频失败：'+e.message));}
+window.desktop.onOpenFiles(receiveOpenFiles);receiveOpenFiles();

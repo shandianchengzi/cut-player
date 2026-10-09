@@ -38,6 +38,8 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force dist
           node scripts/smoke.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Playback smoke test failed' }
+          node scripts/open-file-smoke.cjs
       - name: Benchmark previous release
         shell: pwsh
         run: |
@@ -54,6 +56,8 @@ jobs:
         run: |
           $env:CUT_PLAYER_PACKAGED_EXE = Join-Path $PWD 'dist/win-unpacked/Cut Player.exe'
           node scripts/smoke.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Playback smoke test failed' }
+          node scripts/open-file-smoke.cjs
       - name: Verify actual NSIS installation
         shell: pwsh
         run: |
@@ -66,6 +70,8 @@ jobs:
           if (!(Test-Path $env:CUT_PLAYER_PACKAGED_EXE)) { throw 'Installed executable missing' }
           if (!(Test-Path (Join-Path $installDir 'resources/app-update.yml'))) { throw 'Installed updater configuration missing' }
           node scripts/smoke.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Playback smoke test failed' }
+          node scripts/open-file-smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Installed application smoke test failed' }
       - name: Benchmark optimized build
         shell: pwsh
