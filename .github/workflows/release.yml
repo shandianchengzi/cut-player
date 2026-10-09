@@ -38,6 +38,15 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force dist
           node scripts/smoke.cjs
+      - name: Benchmark previous release
+        shell: pwsh
+        run: |
+          Invoke-WebRequest 'https://github.com/shandianchengzi/cut-player/releases/download/v1.5.6/Cut-Player-1.5.6-x64-Setup.exe' -OutFile "$env:RUNNER_TEMP/baseline-setup.exe"
+          $baseline = Join-Path $env:RUNNER_TEMP 'cut-player-baseline'
+          $result = Start-Process -FilePath "$env:RUNNER_TEMP/baseline-setup.exe" -ArgumentList '/S',"/D=$baseline" -PassThru -Wait
+          if ($result.ExitCode -ne 0) { throw 'Baseline install failed' }
+          node scripts/benchmark.cjs "$baseline/Cut Player.exe" dist/performance-before.json
+          if ($LASTEXITCODE -ne 0) { throw 'Baseline benchmark failed' }
       - run: npm run dist
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
@@ -58,6 +67,13 @@ jobs:
           if (!(Test-Path (Join-Path $installDir 'resources/app-update.yml'))) { throw 'Installed updater configuration missing' }
           node scripts/smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Installed application smoke test failed' }
+      - name: Benchmark optimized build
+        shell: pwsh
+        run: |
+          node scripts/benchmark.cjs "$env:RUNNER_TEMP/cut-player-installed/Cut Player.exe" dist/performance-after.json
+          if ($LASTEXITCODE -ne 0) { throw 'Optimized benchmark failed' }
+          $version = node -p "require('./package.json').version"
+          Write-Output "INSTALLER_BYTES before=$((Get-Item $env:RUNNER_TEMP/baseline-setup.exe).Length) after=$((Get-Item dist/Cut-Player-$version-x64-Setup.exe).Length)"
       - uses: actions/upload-artifact@v4
         with:
           name: windows-x64
@@ -66,6 +82,7 @@ jobs:
             dist/*.yml
             dist/*.blockmap
             dist/app-check.png
+            dist/performance-*.json
           if-no-files-found: error
       - name: Publish versioned release
         shell: pwsh

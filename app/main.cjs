@@ -8,7 +8,8 @@ app.whenReady().then(()=>{
  let state={audio:true};try{state=JSON.parse(fs.readFileSync(configPath,'utf8'));}catch{}
  if(state.config)state.config=upgradeConfig(state.config);
  if(state.seekDefaultVersion!==2){if(state.config?.seek===5)state.config.seek=1;state.seekDefaultVersion=2;}
- function save(){fs.mkdirSync(path.dirname(configPath),{recursive:true});fs.writeFileSync(configPath+'.tmp',JSON.stringify(state,null,2));fs.renameSync(configPath+'.tmp',configPath);}
+ let savedConfig;try{savedConfig=fs.readFileSync(configPath,'utf8');}catch{}
+ function save(){const content=JSON.stringify(state,null,2);if(content===savedConfig)return;fs.mkdirSync(path.dirname(configPath),{recursive:true});fs.writeFileSync(configPath+'.tmp',content);fs.renameSync(configPath+'.tmp',configPath);savedConfig=content;}
  const ffmpeg=app.isPackaged?path.join(process.resourcesPath,'ffmpeg','ffmpeg.exe'):require('ffmpeg-static');
  const ffprobe=app.isPackaged?path.join(process.resourcesPath,'ffmpeg','ffprobe.exe'):path.join(path.dirname(ffmpeg),'ffprobe.exe');
  const {analyzeMedia}=require('./analyze.cjs');
@@ -21,7 +22,7 @@ app.whenReady().then(()=>{
  handle('load-config',()=>({...state,path:configPath}));
  handle('save-config',patch=>{if(patch.config!==undefined){if(!validate(patch.config))throw Error('配置无效');state.config=patch.config;}if(patch.nameList!==undefined){if(!Array.isArray(patch.nameList)||patch.nameList.length>2000||patch.nameList.some(x=>typeof x!=='string'||x.length>200000||/[\r\n,]/.test(x)))throw Error('名称列表无效');state.nameList=patch.nameList;}if(typeof patch.fine==='boolean')state.fine=patch.fine;if(typeof patch.audio==='boolean')state.audio=patch.audio;save();return true;});
  handle('set-input',file=>{if(busy)throw Error('请等待导出完成');if(typeof file!=='string'||!fs.statSync(file).isFile())throw Error('视频路径无效');analysisController?.abort();input=file;return true;});
- handle('analyze-media',async()=>{if(!input)throw Error('请先打开视频');analysisController?.abort();analysisController=new AbortController();const selected=input,controller=analysisController;return analyzeMedia(ffmpeg,ffprobe,input,analysisController.signal,part=>{if(input===selected&&!controller.signal.aborted&&!win.isDestroyed())win.webContents.send('media-update',part);},path.join(app.getPath('userData'),'analysis-cache'));});
+ handle('analyze-media',async token=>{if(!input)throw Error('请先打开视频');analysisController?.abort();analysisController=new AbortController();const selected=input,controller=analysisController;const sent=new Set();const result=await analyzeMedia(ffmpeg,ffprobe,input,analysisController.signal,part=>{if(input===selected&&!controller.signal.aborted&&!win.isDestroyed()){for(const key of ['peaks','frames'])if(part[key])sent.add(key);win.webContents.send('media-update',{...part,token});}},path.join(app.getPath('userData'),'analysis-cache'));for(const key of sent)delete result[key];return result;});
  function run(args,probe=false){return new Promise((resolve,reject)=>{let log='';const child=spawn(ffmpeg,args,{windowsHide:true,shell:false,stdio:['ignore','ignore','pipe']});activeChild=child;child.stderr.on('data',chunk=>log=(log+chunk.toString()).slice(-24000));child.once('error',reject);child.once('close',code=>{activeChild=undefined;if(code===0||probe)resolve(log);else reject(Error('FFmpeg 导出失败：'+log.slice(-1800)));});});}
  handle('export-segments',async text=>{
   if(busy)throw Error('正在导出');if(!input)throw Error('请先打开本地视频');busy=true;let folder;
