@@ -1,6 +1,6 @@
 # Cut Player
 
-Windows 本地视频时间记录与无损分段工具。当前发布版本：**v1.5.12**。
+Windows 本地视频时间记录与无损分段工具。当前发布版本：**v1.5.13**。
 
 [介绍与使用方法](https://shandianchengzi.github.io/cut-player/) · [下载最新版](https://github.com/shandianchengzi/cut-player/releases/latest) · [备用下载](https://shandianchengzi.github.io/cut-player/updates/) · [版本记录](CHANGELOG.md)
 
@@ -87,3 +87,7 @@ npm run dist
 自 v1.5.12 起，应用代码采用 [PolyForm Noncommercial 1.0.0](LICENSE)：许可范围内非商业用途免费，超出该范围的商业用途须另行购买书面授权。见 [许可边界](LICENSE-NOTICE.md) 与 [商业授权 / 收购说明](COMMERCIAL-LICENSE.md)。这是源码可见的非商业许可，不属于 OSI 定义的开源许可证。v1.5.11 及更早按 MIT 发布的版本保留原有权利，换许可证不追溯撤销旧授权。
 
 FFmpeg 及相关第三方信息见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 和安装包内声明。历史发布说明保留在 [release-notes/](release-notes/)。
+
+## 关于菜单
+
+「关于 → 关于 Cut Player」显示实际运行版本、作者 shandianchengzi、许可及商业授权说明、旧版与第三方许可边界，以及源码地址。可通过对话框按钮或关于菜单打开项目源码和商业授权页面。安装目录的 `resources/licensing/` 包含随包许可证与声明。
