@@ -1,13 +1,13 @@
 {
   "name": "cut-player",
-  "version": "1.5.11",
+  "version": "1.5.12",
   "description": "Windows video timestamp notebook",
   "author": "shandianchengzi",
-  "license": "MIT",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "main": "app/main.cjs",
   "scripts": {
     "start": "electron .",
-    "test": "node --test",
+    "test": "node scripts/check-license.cjs && node --test",
     "dist": "electron-builder --win --x64 --publish never"
   },
   "devDependencies": {
@@ -22,7 +22,10 @@
     "files": [
       "app/**/*",
       "package.json",
-      "!node_modules/**/*.map"
+      "!node_modules/**/*.map",
+      "LICENSE",
+      "LICENSE-NOTICE.md",
+      "COMMERCIAL-LICENSE.md"
     ],
     "win": {
       "target": [
@@ -63,6 +66,18 @@
       {
         "from": "node_modules/ffmpeg-static/ffprobe.exe",
         "to": "ffmpeg/ffprobe.exe"
+      },
+      {
+        "from": "LICENSE",
+        "to": "licensing/LICENSE"
+      },
+      {
+        "from": "LICENSE-NOTICE.md",
+        "to": "licensing/LICENSE-NOTICE.md"
+      },
+      {
+        "from": "COMMERCIAL-LICENSE.md",
+        "to": "licensing/COMMERCIAL-LICENSE.md"
       }
     ],
     "compression": "maximum"

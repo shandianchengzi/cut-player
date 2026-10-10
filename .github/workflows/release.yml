@@ -69,6 +69,11 @@ jobs:
           $env:CUT_PLAYER_PACKAGED_EXE = Join-Path $installDir 'Cut Player.exe'
           if (!(Test-Path $env:CUT_PLAYER_PACKAGED_EXE)) { throw 'Installed executable missing' }
           if (!(Test-Path (Join-Path $installDir 'resources/app-update.yml'))) { throw 'Installed updater configuration missing' }
+          foreach ($notice in @('LICENSE', 'LICENSE-NOTICE.md', 'COMMERCIAL-LICENSE.md')) {
+            $installedNotice = Join-Path $installDir "resources/licensing/$notice"
+            if (!(Test-Path $installedNotice)) { throw "Installed licensing notice missing: $notice" }
+            if ((Get-FileHash $installedNotice).Hash -ne (Get-FileHash $notice).Hash) { throw "Installed licensing notice differs: $notice" }
+          }
           node scripts/smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Playback smoke test failed' }
           node scripts/open-file-smoke.cjs

@@ -1,6 +1,6 @@
 # Cut Player 开发与维护
 
-对应 **v1.5.11**。[README](../README.md) · [使用指南](USER_GUIDE.md)
+对应 **v1.5.12**。[README](../README.md) · [使用指南](USER_GUIDE.md)
 
 ## 环境与本地运行
 
@@ -93,4 +93,6 @@ node scripts/open-file-smoke.cjs
 
 ## 许可证与上游
 
-应用代码 MIT；FFmpeg 6.1.1 对应许可证、源码及构建信息见 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。项目独立实现 HTMLVideoElement 桌面播放器，未使用 tiny-player 源码或发布其包。
+应用代码自 v1.5.12 起采用 PolyForm Noncommercial 1.0.0，另提供付费商业授权；旧 MIT 版本权利保留。见 [许可边界](../LICENSE-NOTICE.md) 和 [商业授权](../COMMERCIAL-LICENSE.md)。第三方组件不适用应用的非商业限制。FFmpeg 6.1.1 对应许可证、源码及构建信息见 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。发布时运行 `scripts/check-license.cjs`（已包含在 npm test）检查根包 / lockfile 许可证、打包许可证文件、当前文档与版本说明。不要修改依赖包的许可证或旧版发布说明。
+
+项目独立实现 HTMLVideoElement 桌面播放器，未使用 tiny-player 源码或发布其包。

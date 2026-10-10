@@ -1,6 +1,6 @@
 # Cut Player
 
-Windows 本地视频时间记录与无损分段工具。当前发布版本：**v1.5.11**。
+Windows 本地视频时间记录与无损分段工具。当前发布版本：**v1.5.12**。
 
 [介绍与使用方法](https://shandianchengzi.github.io/cut-player/) · [下载最新版](https://github.com/shandianchengzi/cut-player/releases/latest) · [备用下载](https://shandianchengzi.github.io/cut-player/updates/) · [版本记录](CHANGELOG.md)
 
@@ -78,10 +78,12 @@ npm run dist
 
 现有 Windows Release 工作流执行单元测试、源码桌面测试、打包后测试、实际 NSIS 安装测试及性能比较，并发布对应版本的安装包与更新元数据。介绍页使用现有 Pages 工作流部署，文档更新无需重新发布应用版本。
 
-当前 v1.5.11 已通过 23 项单元测试，以及源码、解包程序、实际安装程序的 Windows 桌面回归验证。新增代码后以对应 CI 运行结果为准。
+上一版 v1.5.11 已通过 23 项单元测试，以及源码、解包程序、实际安装程序的 Windows 桌面回归验证。新增代码后以对应 CI 运行结果为准。
 
 ## 实现与许可证
 
 应用围绕 HTMLVideoElement 独立实现；曾评估 [tiny-player](https://github.com/wangrongding/tiny-player)，未复制其源码或发布其包。播放兼容性取决于 Chromium，内置 FFmpeg 用于分析和导出，不提供通用软件解码播放。
 
-应用代码采用 MIT；FFmpeg 及相关第三方信息见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 和安装包内声明。历史发布说明保留在 [release-notes/](release-notes/)。
+自 v1.5.12 起，应用代码采用 [PolyForm Noncommercial 1.0.0](LICENSE)：许可范围内非商业用途免费，超出该范围的商业用途须另行购买书面授权。见 [许可边界](LICENSE-NOTICE.md) 与 [商业授权 / 收购说明](COMMERCIAL-LICENSE.md)。这是源码可见的非商业许可，不属于 OSI 定义的开源许可证。v1.5.11 及更早按 MIT 发布的版本保留原有权利，换许可证不追溯撤销旧授权。
+
+FFmpeg 及相关第三方信息见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 和安装包内声明。历史发布说明保留在 [release-notes/](release-notes/)。

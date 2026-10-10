@@ -1,9 +1,10 @@
 # 版本记录
 
-当前版本 **v1.5.11**。完整逐版说明见 [release-notes/](release-notes/)；当前用法以 [使用指南](docs/USER_GUIDE.md) 为准。
+当前版本 **v1.5.12**。完整逐版说明见 [release-notes/](release-notes/)；当前用法以 [使用指南](docs/USER_GUIDE.md) 为准。
 
 | 版本 | 主要变化 | 发布说明 |
 | --- | --- | --- |
+| 1.5.12 | 后续版本采用 PolyForm Noncommercial＋付费商业授权，保留旧 MIT 及第三方权利，随包附许可声明 | [详情](release-notes/v1.5.12.md) |
 | 1.5.11 | 允许删除正在使用的源视频；后续操作提示文件不存在并保留记录；按范围流式读取 | [详情](release-notes/v1.5.11.md) |
 | 1.5.10 | 点击波形定位保持原播放 / 暂停状态 | [详情](release-notes/v1.5.10.md) |
 | 1.5.9 | Windows 打开方式 / 启动参数自动导入，已有窗口接收新视频 | [详情](release-notes/v1.5.9.md) |
