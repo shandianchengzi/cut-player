@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('desktop',{
  loadConfig:()=>ipcRenderer.invoke('load-config'),
  saveConfig:patch=>ipcRenderer.invoke('save-config',patch),
  setInput:file=>ipcRenderer.invoke('set-input',typeof file==='string'?file:webUtils.getPathForFile(file)),
+ cancelExport:()=>ipcRenderer.invoke('cancel-export'),
  exportSegments:text=>ipcRenderer.invoke('export-segments',text),
  onProgress:fn=>ipcRenderer.on('export-progress',(_e,text)=>fn(text))
 });

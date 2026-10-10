@@ -22,7 +22,10 @@ app.whenReady().then(()=>{if(!primary)return;
  const {analyzeMedia}=require('./analyze.cjs');
  const win=new BrowserWindow({width:1180,height:760,minWidth:850,minHeight:560,backgroundColor:'#10151f',webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
  mainWindow=win;
- let input,inputUrl,busy=false;
+ let input,inputUrl,busy=false,cancelRequested=false;
+ const {progressParser,localInputOptions}=require('./ffmpeg-progress.cjs');
+ const exportLog=path.join(app.getPath('userData'),'exports.log');
+ function logExport(text){try{fs.mkdirSync(path.dirname(exportLog),{recursive:true});if(fs.existsSync(exportLog)&&fs.statSync(exportLog).size>1000000)fs.renameSync(exportLog,exportLog+'.previous');fs.appendFileSync(exportLog,new Date().toISOString()+' '+text+'\\n');}catch{}}
  function requireInput(){if(!input)throw Error('请先打开本地视频');try{if(!fs.statSync(input).isFile())throw Error();}catch{throw Error('源视频文件不存在（可能已被删除或移动），请重新打开视频');}}
  require('./updates.cjs').installUpdates(win,()=>busy,save);
  win.webContents.setWindowOpenHandler(()=>({action:'deny'}));win.webContents.on('will-navigate',e=>e.preventDefault());
@@ -34,16 +37,27 @@ app.whenReady().then(()=>{if(!primary)return;
  handle('set-input',async file=>{if(busy)throw Error('请等待导出完成');if(typeof file!=='string'||!fs.statSync(file).isFile())throw Error('视频路径无效');analysisController?.abort();inputUrl=await mediaSource.select(file);input=file;return {url:inputUrl,name:path.basename(file)};});
  handle('input-status',()=>{let exists=false;try{exists=!!input&&fs.statSync(input).isFile();}catch{}return {url:inputUrl,exists};});
  handle('analyze-media',async token=>{requireInput();analysisController?.abort();analysisController=new AbortController();const selected=input,controller=analysisController;const sent=new Set();const result=await analyzeMedia(ffmpeg,ffprobe,input,analysisController.signal,part=>{if(input===selected&&!controller.signal.aborted&&!win.isDestroyed()){for(const key of ['peaks','frames'])if(part[key])sent.add(key);win.webContents.send('media-update',{...part,token});}},path.join(app.getPath('userData'),'analysis-cache'),inputUrl);for(const key of sent)delete result[key];return result;});
- function run(args,probe=false){return new Promise((resolve,reject)=>{let log='';const child=spawn(ffmpeg,args,{windowsHide:true,shell:false,stdio:['ignore','ignore','pipe']});activeChild=child;child.stderr.on('data',chunk=>log=(log+chunk.toString()).slice(-24000));child.once('error',reject);child.once('close',code=>{activeChild=undefined;if(code===0||probe)resolve(log);else reject(Error('FFmpeg 导出失败：'+log.slice(-1800)));});});}
+ handle('cancel-export',()=>{if(busy){cancelRequested=true;activeChild?.kill();return true;}return false;});
+ function run(args,probe=false,onProgress){return new Promise((resolve,reject)=>{
+  if(cancelRequested){reject(Error('已停止切割'));return;}
+  const at=args.indexOf('-i');if(at>=0)args=[...args.slice(0,at),...localInputOptions(args[at+1]),...args.slice(at)];
+  if(onProgress)args=['-progress','pipe:1','-stats_period','1','-nostats',...args];
+  let log='',finished=false;const child=spawn(ffmpeg,args,{windowsHide:true,shell:false,stdio:['ignore',onProgress?'pipe':'ignore','pipe']});activeChild=child;
+  if(onProgress)child.stdout.on('data',progressParser(onProgress));
+  child.stderr.on('data',chunk=>log=(log+chunk.toString()).slice(-24000));
+  function done(error){if(finished)return;finished=true;if(activeChild===child)activeChild=undefined;logExport((error?error.message:'FFmpeg 完成')+'\n'+log);if(error)reject(error);else resolve(log);}
+  child.once('error',e=>done(e));child.once('close',code=>done(cancelRequested?Error('已停止切割'):code===0||probe?null:Error('FFmpeg 导出失败：'+log.slice(-1800))));
+ });}
  handle('export-segments',async text=>{
-  if(busy)throw Error('正在导出');requireInput();busy=true;let folder;
+  if(busy)throw Error('正在导出');requireInput();busy=true;cancelRequested=false;let folder;
+  logExport('开始切割 · 版本 '+app.getVersion()+' · 源文件 '+input);
   try{
    const info=await run(['-hide_banner','-nostdin','-i',inputUrl],true);
    const d=/Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/.exec(info);const duration=d?Number(d[1])*3600+Number(d[2])*60+Number(d[3]):NaN;
    const plan=parsePlan(text,duration);const audioCodec=/Audio:\s*([\w]+)/.exec(info)?.[1];const audio=state.audio;
    let parent=process.env.CUT_PLAYER_TEST_OUTPUT;
    if(!parent){const choice=await dialog.showOpenDialog(win,{title:'选择片段输出目录',properties:['openDirectory','createDirectory']});if(choice.canceled)return {canceled:true};parent=choice.filePaths[0];}
-   folder=parent;
+   if(cancelRequested)throw Error('已停止切割');folder=parent;
    const ext=path.extname(input).toLowerCase()||'.mp4';let audioCount=0,videoBytes=0;const sourceBytes=fs.statSync(input).size;const size=n=>n>=1073741824?(n/1073741824).toFixed(2)+' GB':(n/1048576).toFixed(2)+' MB';
    const targets=plan.flatMap(part=>[path.join(folder,part.name+ext),...(audio&&audioCodec?[path.join(folder,part.name+(audioCodec==='aac'?'.aac':'.mka'))]:[])]);
    if(targets.some(target=>path.resolve(target).toLowerCase()===path.resolve(input).toLowerCase()))throw Error('输出文件与源视频重名，请修改 names 或选择其他目录');
@@ -52,11 +66,17 @@ app.whenReady().then(()=>{if(!primary)return;
    for(let i=0;i<plan.length;i++){
     const part=plan[i],output=path.join(folder,part.name+ext);
     win.webContents.send('export-progress',`正在导出 ${i+1}/${plan.length}：${part.name} · 已导出视频 ${size(videoBytes)} / 原视频 ${size(sourceBytes)}`);
-    requireInput();await run(videoArgs(inputUrl,part,output));videoBytes+=fs.statSync(output).size;win.webContents.send('export-progress',`已导出视频 ${i+1}/${plan.length} · 视频总大小 ${size(videoBytes)} / 原视频 ${size(sourceBytes)}`);
-    if(audio&&audioCodec){const audioOutput=path.join(folder,part.name+(audioCodec==='aac'?'.aac':'.mka'));await run(audioArgs(output,audioOutput));audioCount++;}
+    requireInput();
+    const started=Date.now();let measured={seconds:0,bytes:0,speed:''},lastAdvance=started,lastBytes=0,lastTime=0;
+    const report=()=>{let written=0;try{written=fs.statSync(output).size;}catch{}written=Math.max(written,measured.bytes);if(written!==lastBytes||measured.seconds!==lastTime){lastAdvance=Date.now();lastBytes=written;lastTime=measured.seconds;}
+     const elapsed=Math.floor((Date.now()-started)/1000),length=part.end-part.start,percent=Math.min(99.9,measured.seconds/length*100);
+     win.webContents.send('export-progress',`正在导出 ${i+1}/${plan.length}：${part.name} · 本段 ${percent.toFixed(1)}% / ${size(written)} · 已导出视频 ${size(videoBytes+written)} / 原视频 ${size(sourceBytes)} · 已用 ${elapsed} 秒`+(Date.now()-lastAdvance>=30000?' · 等待源视频读取 / 定位，请检查磁盘与输出目录':'')+(measured.speed?' · '+measured.speed:''));
+    };
+    const timer=setInterval(report,1000);try{await run(videoArgs(inputUrl,part,output),false,data=>{measured=data;report();});}finally{clearInterval(timer);}videoBytes+=fs.statSync(output).size;win.webContents.send('export-progress',`已导出视频 ${i+1}/${plan.length} · 视频总大小 ${size(videoBytes)} / 原视频 ${size(sourceBytes)}`);
+    if(audio&&audioCodec){const audioOutput=path.join(folder,part.name+(audioCodec==='aac'?'.aac':'.mka'));await run(audioArgs(output,audioOutput),false,data=>win.webContents.send('export-progress',`正在提取音频 ${i+1}/${plan.length}：${part.name} · ${size(data.bytes)} · 视频总大小 ${size(videoBytes)} / 原视频 ${size(sourceBytes)}`));audioCount++;}
    }
    return {folder,count:plan.length,audioCount,videoBytes,sourceBytes,noAudio:audio&&!audioCodec};
-  }catch(e){try{requireInput();}catch(missing){e=missing;}if(folder)e.message+='\n已完成或未完成的文件保留在：'+folder;throw e;}finally{busy=false;}
+  }catch(e){logExport('切割终止：'+e.message);try{requireInput();}catch(missing){e=missing;}if(folder)e.message+='\n已完成或未完成的文件保留在：'+folder;e.message+='\n诊断日志：'+exportLog;throw e;}finally{busy=false;cancelRequested=false;}
  });
  win.on('close',e=>{if(busy){e.preventDefault();dialog.showMessageBox(win,{type:'info',message:'正在导出，请等待任务结束后关闭。'});}});
  win.loadFile(path.join(__dirname,'index.html'));
