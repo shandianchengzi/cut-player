@@ -1,6 +1,6 @@
 # Cut Player 使用指南
 
-对应当前发布版本 **v1.5.12**。[在线介绍](https://shandianchengzi.github.io/cut-player/) · [README](../README.md) · [故障排查](TROUBLESHOOTING.md)
+对应当前发布版本 **v1.5.14**。[在线介绍](https://shandianchengzi.github.io/cut-player/) · [README](../README.md) · [故障排查](TROUBLESHOOTING.md)
 
 ## 1. 安装与打开视频
 
@@ -155,3 +155,7 @@ v1.5.11 起允许在播放、分析或切割读取源视频期间，从资源管
 ## 10. 使用许可
 
 自 v1.5.12 起采用 PolyForm Noncommercial 1.0.0，许可范围内非商业用途免费；其他商业用途须单独购买书面授权。免费用途以许可证原文为准。参见 [许可说明](../LICENSE-NOTICE.md) 与 [商业授权 / 收购](../COMMERCIAL-LICENSE.md)。v1.5.11 及更早 MIT 版本保持原权利；第三方组件和用户素材分别遵循自身权利。
+
+## 11. 大视频导出与停止
+
+v1.5.14 按秒显示本段进度、写入大小、累计视频大小和耗时。30 秒未观察到写入 / 时间推进时提示等待读取或定位。「停止切割」结束任务，保留已完成及部分输出。本机 HTTP 读取绕过代理，单次读取超时 60 秒时报错。日志位于 userData 下的 `exports.log`，失败提示给出路径。

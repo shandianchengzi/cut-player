@@ -1,6 +1,6 @@
 # Cut Player 开发与维护
 
-对应 **v1.5.12**。[README](../README.md) · [使用指南](USER_GUIDE.md)
+对应 **v1.5.14**。[README](../README.md) · [使用指南](USER_GUIDE.md)
 
 ## 环境与本地运行
 
@@ -52,7 +52,7 @@ Invoke-WebRequest 'https://github.com/eugeneware/ffmpeg-static/releases/download
 
 ## 验证
 
-`npm test` 使用 Node 内置测试运行器。当前版本 23 项测试覆盖配置、时间与名称、记录编辑、分段计划、分析、更新下载，以及源文件范围读取和占用期间删除。
+`npm test` 使用 Node 内置测试运行器。当前版本 25 项测试覆盖配置、时间与名称、记录编辑、分段计划、分析、更新下载，以及源文件范围读取和占用期间删除。
 
 Windows 桌面验证：
 
@@ -96,3 +96,5 @@ node scripts/open-file-smoke.cjs
 应用代码自 v1.5.12 起采用 PolyForm Noncommercial 1.0.0，另提供付费商业授权；旧 MIT 版本权利保留。见 [许可边界](../LICENSE-NOTICE.md) 和 [商业授权](../COMMERCIAL-LICENSE.md)。第三方组件不适用应用的非商业限制。FFmpeg 6.1.1 对应许可证、源码及构建信息见 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。发布时运行 `scripts/check-license.cjs`（已包含在 npm test）检查根包 / lockfile 许可证、打包许可证文件、当前文档与版本说明。不要修改依赖包的许可证或旧版发布说明。
 
 项目独立实现 HTMLVideoElement 桌面播放器，未使用 tiny-player 源码或发布其包。
+
+导出实时状态由 `app/ffmpeg-progress.cjs` 解析 FFmpeg progress 协议；本机输入选项由同模块明确设置代理绕过和读取超时。保留输出端定位及 -c copy，不以进度优化改变切割语义。停止任务时保留部分文件，日志为 userData 下的 exports.log。
