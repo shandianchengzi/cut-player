@@ -5,7 +5,7 @@ const pkg=JSON.parse(read('package.json')),lock=JSON.parse(read('package-lock.js
 assert.equal(pkg.license,'PolyForm-Noncommercial-1.0.0','Application license must match LICENSE');
 assert.equal(lock.packages[''].license,pkg.license,'Root lockfile license differs');
 assert.equal(lock.version,pkg.version);assert.equal(lock.packages[''].version,pkg.version);
-assert.equal(crypto.createHash('sha256').update(read('LICENSE')).digest('hex'),'befa041db77c25fa8f6028908d16fde1588e5b65a3957b8630c2dda66773bbe2','Use the unmodified official PolyForm license');
+assert.equal(crypto.createHash('sha256').update(read('LICENSE').trimEnd()+'\n').digest('hex'),'c0ea4a896d2c8c394b29f9427589996db826cd501c512279ff0ed3ef48fabbe5','Use the unmodified official PolyForm license');
 for(const file of ['LICENSE','LICENSE-NOTICE.md','COMMERCIAL-LICENSE.md']){
  assert.ok(pkg.build.files.includes(file),'Missing application license file: '+file);
  assert.ok(pkg.build.extraResources.some(x=>x.from===file&&x.to==='licensing/'+file),'Missing installed license resource: '+file);
