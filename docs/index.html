@@ -1,5 +1,82 @@
-<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Cut Player：Windows 视频时间记录工具，边看视频边记录时间轴。"><title>Cut Player — 边看，边记</title><link rel="stylesheet" href="site.css"><body><nav><a class="brand" href="#">◉ Cut Player</a><a href="https://github.com/shandianchengzi/cut-player">GitHub ↗</a></nav><main><div class="badge">WINDOWS · 本地视频 · 独立桌面应用</div><h1>找到这一刻。<br><em>一键记下来。</em></h1><p class="lead">播放视频、定位片段、记录时间。左侧专心看，右侧随手记，<br>让演唱会切段、字幕打轴和素材整理更顺手。</p><div class="actions"><a class="primary" href="https://github.com/shandianchengzi/cut-player/releases/latest">下载 Windows 版 ↓</a><a href="#guide">使用方法 →</a></div><p class="fine">Windows 10 / 11 · x64 · 仅提供安装版（支持更新） · 下载来自 GitHub Releases</p><section class="mock" aria-label="应用界面示意"><div class="mockhead">◉ Cut Player <span>视频时间记录工具</span></div><div class="panes"><div><div class="screen"><span>▶</span><small>concert.mp4</small></div><div class="progress"></div><div class="caption">00:02:33.000 <b>＋ 记录当前时间</b></div></div><div class="note"><b>时间记录 <span>复制</span></b><pre>breakpoints:00:10,01:23
-names:video_20260926_202424x,
-video_20260926_202434x,
-video_20260926_202547x
-<span class="caret">│</span></pre></div></div></section><div class="features"><article><h3>时间，随手记录</h3><p>点击按钮或按 Ctrl+Alt+V，将当前播放时间追加到右侧文本。自动生成 breakpoints 与 names 两行；从 video、DJI 或 Unix 时间戳文件名提取拍摄时间，按播放位置同步生成片段名称。文本可自由编辑。下方可导入名称按钮列表，按空格、逗号或自定义分隔符拆分，点击直接粘贴到文本框光标处，保留已有内容。</p></article><article><h3>操作，按你的习惯</h3><p>方向键控制音量与进度。视频下方显示音量波形；勾选精细模式后左右键逐帧移动，滚轮同步缩放波形，断点和自动名称升级为毫秒精度。1 / 2 / 3 / 4 默认切换 1× / 2× / 4× / 16×；松开空格切换播放/暂停，左右键默认移动 1 秒；全部快捷键、倍速及快进步长均可配置。</p></article><article><h3>内容，一次带走</h3><p>点击复制或按 Ctrl+Alt+C，复制整个文本框。设置与记录自动保存在本机，关掉再打开也能继续整理。菜单「帮助 → 检查版本更新」支持后台下载、校验并自动安装重启；波形与帧时间采用轻量分析并缓存结果。</p></article></div><section id="guide"><h2>三步开始记录</h2><ol><li>从 Releases 下载 Setup.exe 安装包，安装后通过新建的快捷方式启动。旧便携版请手动迁移到安装版；配置与记录保留。</li><li>打开本地视频，使用进度条或快捷键定位；按 Ctrl+Alt+V 记录。</li><li>按 Ctrl+Alt+C 复制内容，粘贴到你的切段清单或字幕工具。</li></ol><p>快捷键在应用窗口内生效。支持常见 H.264/AAC MP4 和兼容的 WebM；其他文件能否播放取决于其音视频编码。内置 FFmpeg，无需额外安装。点击「切割」即可按 names 命名导出全部片段；默认同时导出音频，均采用 -c copy 原码流复制。AAC 输出 .aac，其他编码输出 .mka。无重编码切点受关键帧限制。快捷键和倍速等设置自动保存至本机 config.json。</p></section></main><footer>Cut Player · 开源 · <a href="https://github.com/shandianchengzi/cut-player/releases">所有版本</a></footer></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Cut Player v1.5.11：Windows 本地视频时间记录、波形逐帧定位、名称整理与无损分段。下载与完整使用说明。">
+<title>Cut Player · 本地视频记录与无损分段</title>
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<nav aria-label="主导航"><a class="brand" href="#">◉ Cut Player</a><div><a href="#guide">使用方法</a><a href="#faq">常见问题</a><a href="https://github.com/shandianchengzi/cut-player">GitHub ↗</a></div></nav>
+<main>
+<div class="badge">v1.5.11 · WINDOWS 10 / 11 · X64 · 本地视频</div>
+<h1>找到这一刻。<br><em>记下来，切出来。</em></h1>
+<p class="lead">边看视频边记录断点，按拍摄时间与曲名整理片段。<br>从波形定位到无损导出，在一个窗口里完成。</p>
+<div class="actions"><a class="primary" href="https://github.com/shandianchengzi/cut-player/releases/latest">下载 Windows 安装版 ↓</a><a href="updates/">备用下载 →</a><a href="#guide">开始使用 →</a></div>
+<p class="fine">仅提供 Setup.exe 安装版 · 内置 Electron、FFmpeg / FFprobe · 本地播放无需联网 · 安装包未签名</p>
+
+<section class="mock" aria-label="应用界面示意">
+<div class="mockhead">◉ Cut Player <span>界面示意 · 实际操作以应用为准</span></div>
+<div class="panes">
+<div><div class="screen"><span>▶</span><small>video_20260926_202424.mp4</small></div><div class="progress"></div><div class="caption"><span>00:00:10.000 / 00:20:00.000</span><b>播放 · 音量 · 全屏</b></div><div class="wave-demo" aria-hidden="true">▂ ▃ ▆ ▃ ▂ ▅ ▇ ▄ ▂ ▅ ▃ ▆ ▂ ▄ ▇ ▃ ▅ ▂ ▆ ▃ ▄ ▂ ▅ ▇</div><div class="caption"><span>精细切割（逐帧） · 滚轮缩放波形</span><b>＋ 记录当前时间</b></div></div>
+<div class="note"><div class="mock-tools"><b>时间记录</b><span>初始化 · 删除 · 复制 · 切割</span></div><small>☑ 同时导出无损音频</small><pre>breakpoints:00:10,01:23
+names:video_20260926_202424x,video_20260926_202434x,video_20260926_202547x</pre><div class="mock-names"><b>可选名称</b><span>开场</span><span>修星星的人</span><span>和光同尘</span><span>云裳羽衣曲</span></div></div>
+</div>
+</section>
+
+<div class="features">
+<article><h3>定位与记录</h3><p>自定义进度条、音量和全屏控制，长按左右键连续定位。点击波形保持原播放状态；精细模式逐帧移动并记录毫秒时间。</p></article>
+<article><h3>命名与修复</h3><p>生成 breakpoints / names 两行文本。内置演唱会顺序名称，可导入或恢复默认。删除记录会合并片段，初始化可恢复初始结构。</p></article>
+<article><h3>无损导出</h3><p>按名称直接输出到所选文件夹，可同时提取音频。显示视频总大小与源视频大小。全部采用 -c copy，切点受关键帧限制。</p></article>
+</div>
+
+<section id="guide">
+<h2>从打开视频到导出片段</h2>
+<p class="section-lead">当前用法对应 v1.5.11。<a href="https://github.com/shandianchengzi/cut-player/blob/main/docs/USER_GUIDE.md">完整使用指南 ↗</a> · <a href="https://github.com/shandianchengzi/cut-player/blob/main/docs/TROUBLESHOOTING.md">故障排查 ↗</a></p>
+<div class="contents" aria-label="使用方法目录"><a href="#open">01 打开</a><a href="#controls">02 定位</a><a href="#notes">03 记录</a><a href="#names">04 命名</a><a href="#edit">05 修复结构</a><a href="#export">06 导出</a><a href="#updates">07 更新</a></div>
+<article class="guide-step" id="open"><div class="step-label">01 / 打开视频</div><h3>安装后，用你习惯的方式打开</h3><p>下载 Setup.exe 安装包，运行安装后通过新建的桌面或开始菜单快捷方式启动。点击「打开视频」、把视频拖到窗口，或在 Windows 右键「打开方式」中选择已安装的 Cut Player.exe。</p><p>程序已运行时，新文件交给原窗口处理。右侧已有非空记录时，先确认是否重置；「取消」保留原视频和文本，「继续打开」生成新视频的初始记录。需要保留的内容请先复制。</p><p class="callout">旧便携版已停止发布。请手动安装 Setup.exe，并改用新的快捷方式，原本机数据目录会沿用。安装器不会自动接管所有视频的默认打开方式。</p></article>
+
+<article class="guide-step" id="controls"><div class="step-label">02 / 播放与定位</div><h3>键盘、进度条、波形配合使用</h3><p>点击播放按钮或视频画面控制播放，拖动进度条定位，悬停可查看目标时间。波形在后台分析后显示；点击波形定位时，播放中继续播放，暂停时保持暂停。滚轮向上放大、向下缩小波形。</p>
+<div class="table-wrap"><table><caption>默认快捷键（仅应用窗口内生效）</caption><thead><tr><th>操作</th><th>按键</th><th>默认行为</th></tr></thead><tbody>
+<tr><td>播放 / 暂停</td><td><kbd>空格</kbd></td><td>松开时切换；长按不重复切换</td></tr>
+<tr><td>快退 / 快进</td><td><kbd>←</kbd> / <kbd>→</kbd></td><td>每次 1 秒，长按连续移动</td></tr>
+<tr><td>减小 / 增大音量</td><td><kbd>↓</kbd> / <kbd>↑</kbd></td><td>每次 5 个百分点</td></tr>
+<tr><td>四档倍速</td><td><kbd>1</kbd> / <kbd>2</kbd> / <kbd>3</kbd> / <kbd>4</kbd></td><td>1× / 2× / 4× / 16×</td></tr>
+<tr><td>记录当前时间</td><td><kbd>Ctrl+Alt+V</kbd></td><td>长按只记录一次</td></tr>
+<tr><td>复制全部记录</td><td><kbd>Ctrl+Alt+C</kbd></td><td>复制整个文本框</td></tr>
+</tbody></table></div>
+<p>「快捷键与倍速」可修改全部快捷键、四档倍速、快进步长及音量步长。编辑文本时方向键、数字和空格正常输入，记录与复制组合键仍可使用。</p>
+<details><summary>精细切割（逐帧）实际改变什么？</summary><p>勾选时会暂停视频；帧时间准备好后，左右键逐帧移动，长按可连续逐帧。波形定位对齐帧时间，断点使用 MM:SS.mmm，自动名称改用毫秒时间戳。手工改过的名称保留。取消勾选不会自动还原已有毫秒记录。</p><p>它提高定位与记录精度，导出仍为原码流复制，不能保证逐帧精确。精细模式的左右键会暂停；点击波形仍保持点击前的播放状态。</p></details></article>
+
+<article class="guide-step" id="notes"><div class="step-label">03 / 时间记录</div><h3>两行文本，明确每段的起点和名称</h3><p>打开视频后 breakpoints 为空，names 只有第一段名称。到达需要的切点，点击「＋ 记录当前时间」或按记录快捷键，同步追加一个断点和一个片段名称。</p>
+<pre class="example">breakpoints:00:10,01:23
+names:video_20260926_202424x,video_20260926_202434x,video_20260926_202547x</pre>
+<p>名称数必须比断点数多一个。实际文本是两行，值用英文逗号分隔；文本框视觉折行不影响结构。断点为相对视频开始的累积分钟 / 秒，严格递增、大于零且小于视频时长；超过一小时写为 60:10，精细模式可用 60:10.123。</p>
+<p>名称从 video、DJI 或 Unix 时间戳文件名识别拍摄时间，用原视频时间加当前播放位置计算；未识别时间则加相对位置后缀。普通模式按秒向下取整。可直接编辑和复制，文本自动暂存在本机。</p>
+<details><summary>自动命名与时区细节</summary><p>日期时间文件名在普通模式按原钟面时间计算，不做时区转换；DJI 名称归一化为 DJI_YYYYMMDDHHMMSSx。支持 13 位 Unix 毫秒和 11 位 Unix 秒（可含前导零）。精细模式将日历文件名按 UTC+8 换算为 Unix 毫秒，未识别时间的名称使用相对毫秒后缀。详见完整使用指南。</p></details></article>
+
+<article class="guide-step" id="names"><div class="step-label">04 / 快速命名</div><h3>默认演唱会顺序，也能换成你的清单</h3><p>可选名称内置此前整理的周深北京鸟巢演唱会顺序，共 45 项，包含歌曲、串场、点歌和工作人员致谢。「北京限定曲」「点歌1」「点歌2」是占位名称，不会自动识别视频曲目或演出日期。</p><p>先将光标放到文本框的目标位置，再点击名称按钮，名称插入光标处。它不会自动替换原名或选中文字，需要替换时先手工删掉旧文字。</p>
+<ol><li>点击「导入名称」，粘贴列表或选择 UTF-8 的 TXT / CSV 文本（最多 200KB）。</li><li>选择空格 / 换行、英文逗号或自定义分隔符。曲名含空格时，推荐用逗号或自定义分隔符。</li><li>点击「导入并替换列表」。这会替换可选按钮列表，不改写右侧记录；重复名称去重，最多 2000 项。</li><li>导入面板右下角「恢复默认」会立即恢复并保存默认列表，随后关闭面板。</li></ol>
+<p>名称不能含逗号或换行。CSV 文件按选定分隔符拆分，不支持完整 CSV 引号转义。已保存的自定义列表升级后保留。</p></article>
+
+<article class="guide-step" id="edit"><div class="step-label">05 / 调整与恢复</div><h3>删除记录，或重新初始化结构</h3><p>文本框上方「删除」打开可滚动的片段选择列表，选择后删除名称和对应断点。第一段的时间范围并入后一段，其余段并入前一段。仅剩一段时请使用初始化。此操作只删除记录项，不删除磁盘视频，也不跳过这段影像。</p><p>例如 breakpoints:00:10,00:20 / names:A,B,C，删除 B 后变成 breakpoints:00:20 / names:A,C；A 覆盖 0—20 秒。</p><p>「初始化」确认后清空已填断点与名称，恢复当前视频的初始 breakpoints / names 两行；精细模式使用精细名称。它可修复格式损坏，但不能恢复此前完整编辑内容。取消不改动，重要记录请先复制保存。</p></article>
+
+<article class="guide-step" id="export"><div class="step-label">06 / 无损分段</div><h3>选一个目录，按 names 导出全部片段</h3><p>点击「切割」选择输出目录。视频直接写入该文件夹，依次导出 0 → 第一断点、相邻断点之间、最后断点 → 视频末尾；没有断点就导出整段。视频保留原容器，复制视频和音轨。</p><p>默认勾选「同时导出无损音频」，提取每段第一条音轨：AAC 输出 .aac，其他编码输出 .mka；无音轨跳过并提示。可取消勾选，仅导出视频。</p><p>状态显示片段进度、已导出视频总大小和原视频大小，视频总和不含独立音频。同名输出先询问覆盖，不能覆盖源视频；名称须符合 Windows 文件规则且不能重复。</p><p class="callout">全部导出使用 -c copy，不重新编码，切点受关键帧限制。导出期间需等待完成后切换视频或关闭窗口；失败时已生成或未完成的文件保留在提示目录。</p></article>
+
+<article class="guide-step" id="updates"><div class="step-label">07 / 更新与数据</div><h3>断线可重试，也可手动覆盖安装</h3><p>「帮助 → 检查版本更新」手动发起检查。GitHub 连接失败会重试并切换 Pages 备用源；下载保留部分文件，服务器支持时续传，不支持 Range 时重新完整下载。安装包通过 SHA-512 校验后自动安装重启；正在切割时等待结束。</p><p>仍然失败可在提示框或帮助菜单选择「浏览器下载最新版」或「备用下载页」。下载 Setup.exe 后关闭播放器并覆盖安装，配置和记录沿用本机数据目录。</p><p>通常目录为 %APPDATA%/cut-player/：config.json 保存配置、localStorage 保存文本、analysis-cache 保存分析缓存、updates.log 保存更新日志。关闭应用后可备份整个目录。记录不是逐视频历史档案，打开新视频、初始化或重置会改写它，请先复制需要保留的内容。</p></article>
+</section>
+
+<section id="faq">
+<h2>常见问题</h2>
+<details open><summary>视频正在使用，能从资源管理器删除吗？</summary><p>v1.5.11 支持删除正在播放、分析或切割读取的源视频。已缓冲画面可能暂时可见；随后播放、定位、记录或导出会提示「源视频文件不存在」，保留文本。其他软件、权限或磁盘问题仍可能阻止删除。右侧「删除」按钮只是删除记录项。</p></details>
+<details><summary>更新报 net::ERR_CONNECTION_CLOSED 怎么办？</summary><p>这是连接被关闭的提示。先重试，再尝试浏览器或备用下载页；手动覆盖安装会保留原数据。检查系统网络 / 代理和 updates.log。当前重试与续传提高恢复能力，但不能保证被阻断的下载源可达。</p></details>
+<details><summary>支持所有视频格式吗？</summary><p>支持 Chromium 可解码的 H.264/AAC MP4、兼容 WebM 等；MKV、MOV 等取决于实际编码。内置 FFmpeg 用于分析和导出，不提供通用播放软解码。极高倍速音频表现也取决于 Chromium。</p></details>
+<details><summary>新视频不能编辑、长按失效、打开方式没载入？</summary><p>当前版已包含文本焦点（1.5.4）、长按定位（1.5.8）、Windows 打开方式（1.5.9）和波形播放状态（1.5.10）的修复。确认启动的是当前安装版，关闭旧便携版；文本编辑时方向键仍保留输入用途。具体排查见故障文档。</p></details>
+<p><a href="https://github.com/shandianchengzi/cut-player/blob/main/docs/TROUBLESHOOTING.md">查看完整故障排查 ↗</a> · <a href="https://github.com/shandianchengzi/cut-player/blob/main/CHANGELOG.md">查看版本记录 ↗</a></p>
+</section>
+<section class="resources"><h2>文档与源码</h2><div class="resource-links"><a href="https://github.com/shandianchengzi/cut-player/blob/main/docs/USER_GUIDE.md">完整使用指南 ↗</a><a href="https://github.com/shandianchengzi/cut-player/blob/main/docs/TROUBLESHOOTING.md">故障排查 ↗</a><a href="https://github.com/shandianchengzi/cut-player/blob/main/docs/DEVELOPING.md">开发与维护 ↗</a><a href="https://github.com/shandianchengzi/cut-player/blob/main/README.md">README ↗</a><a href="https://github.com/shandianchengzi/cut-player/releases">所有版本 ↗</a></div></section>
+</main>
+<footer>Cut Player · 当前说明 v1.5.11 · <a href="https://github.com/shandianchengzi/cut-player">开源项目</a> · <a href="updates/">备用下载</a></footer>
+</body>
+</html>

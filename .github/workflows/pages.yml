@@ -19,6 +19,18 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - name: Preserve latest installer and backup update feed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p docs/updates
+          gh release download --repo "$GITHUB_REPOSITORY" --pattern '*-Setup.exe' --pattern 'latest.yml' --dir docs/updates --clobber
+          installer=$(find docs/updates -maxdepth 1 -name '*-Setup.exe' -printf '%f\n' | head -n 1)
+          test -n "$installer"
+          test -s docs/updates/latest.yml
+          cat > docs/updates/index.html <<EOF
+          <!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cut Player 备用下载</title><h1>Cut Player 最新安装版</h1><p><a href="$installer">下载安装包</a></p><p>下载后关闭播放器，运行安装包覆盖安装，配置与记录保留。</p><p><a href="../">介绍与使用方法</a> · <a href="https://github.com/shandianchengzi/cut-player/releases/latest">GitHub 下载</a></p></html>
+          EOF
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
