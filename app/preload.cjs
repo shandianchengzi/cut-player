@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('desktop',{
  onOpenFiles:fn=>ipcRenderer.on('open-files-pending',()=>fn()),
  onMediaUpdate:fn=>ipcRenderer.on('media-update',(_e,data)=>fn(data)),
  onUpdateState:fn=>ipcRenderer.on('update-state',(_e,text)=>fn(text)),
+ inputStatus:()=>ipcRenderer.invoke('input-status'),
  analyze:token=>ipcRenderer.invoke('analyze-media',token),
  copy:text=>ipcRenderer.invoke('copy-text',text),
  loadConfig:()=>ipcRenderer.invoke('load-config'),
