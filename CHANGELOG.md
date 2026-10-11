@@ -1,9 +1,10 @@
 # 版本记录
 
-当前版本 **v1.5.14**。完整逐版说明见 [release-notes/](release-notes/)；当前用法以 [使用指南](docs/USER_GUIDE.md) 为准。
+当前版本 **v1.5.15**。完整逐版说明见 [release-notes/](release-notes/)；当前用法以 [使用指南](docs/USER_GUIDE.md) 为准。
 
 | 版本 | 主要变化 | 发布说明 |
 | --- | --- | --- |
+| 1.5.15 | 导出后读取实际片段总时长，与原视频时长及差值一起显示并记录日志 | [详情](release-notes/v1.5.15.md) |
 | 1.5.14 | 片段内实时进度、大小与耗时；停止切割；本机读取绕过代理、读取超时与诊断日志 | [详情](release-notes/v1.5.14.md) |
 | 1.5.13 | 新增关于菜单，显示作者、实际版本与授权说明，提供源码及商业授权入口 | [详情](release-notes/v1.5.13.md) |
 | 1.5.12 | 后续版本采用 PolyForm Noncommercial＋付费商业授权，保留旧 MIT 及第三方权利，随包附许可声明 | [详情](release-notes/v1.5.12.md) |

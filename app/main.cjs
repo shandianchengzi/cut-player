@@ -38,27 +38,28 @@ app.whenReady().then(()=>{if(!primary)return;
  handle('input-status',()=>{let exists=false;try{exists=!!input&&fs.statSync(input).isFile();}catch{}return {url:inputUrl,exists};});
  handle('analyze-media',async token=>{requireInput();analysisController?.abort();analysisController=new AbortController();const selected=input,controller=analysisController;const sent=new Set();const result=await analyzeMedia(ffmpeg,ffprobe,input,analysisController.signal,part=>{if(input===selected&&!controller.signal.aborted&&!win.isDestroyed()){for(const key of ['peaks','frames'])if(part[key])sent.add(key);win.webContents.send('media-update',{...part,token});}},path.join(app.getPath('userData'),'analysis-cache'),inputUrl);for(const key of sent)delete result[key];return result;});
  handle('cancel-export',()=>{if(busy){cancelRequested=true;activeChild?.kill();return true;}return false;});
- function run(args,probe=false,onProgress){return new Promise((resolve,reject)=>{
+ function run(args,probe=false,onProgress,executable=ffmpeg){return new Promise((resolve,reject)=>{
   if(cancelRequested){reject(Error('已停止切割'));return;}
   const at=args.indexOf('-i');if(at>=0)args=[...args.slice(0,at),...localInputOptions(args[at+1]),...args.slice(at)];
   if(onProgress)args=['-progress','pipe:1','-stats_period','1','-nostats',...args];
-  let log='',finished=false;const child=spawn(ffmpeg,args,{windowsHide:true,shell:false,stdio:['ignore',onProgress?'pipe':'ignore','pipe']});activeChild=child;
+  let log='',stdout='',finished=false;const child=spawn(executable,args,{windowsHide:true,shell:false,stdio:['ignore',onProgress||executable===ffprobe?'pipe':'ignore','pipe']});activeChild=child;
   if(onProgress)child.stdout.on('data',progressParser(onProgress));
+  else if(executable===ffprobe)child.stdout.on('data',chunk=>stdout=(stdout+chunk.toString()).slice(-8192));
   child.stderr.on('data',chunk=>log=(log+chunk.toString()).slice(-24000));
-  function done(error){if(finished)return;finished=true;if(activeChild===child)activeChild=undefined;logExport((error?error.message:'FFmpeg 完成')+'\n'+log);if(error)reject(error);else resolve(log);}
+  function done(error){if(finished)return;finished=true;if(activeChild===child)activeChild=undefined;logExport((error?error.message:'FFmpeg 完成')+'\n'+log);if(error)reject(error);else resolve(executable===ffprobe?stdout:log);}
   child.once('error',e=>done(e));child.once('close',code=>done(cancelRequested?Error('已停止切割'):code===0||probe?null:Error('FFmpeg 导出失败：'+log.slice(-1800))));
  });}
+ async function readDuration(file){const value=await run(['-v','error','-show_entries','format=duration','-of','default=noprint_wrappers=1:nokey=1','-i',file],false,undefined,ffprobe);const seconds=Number(value.trim());if(!value.trim()||!Number.isFinite(seconds)||seconds<=0)throw Error('无法核对视频时长：'+file);return seconds;}
  handle('export-segments',async text=>{
   if(busy)throw Error('正在导出');requireInput();busy=true;cancelRequested=false;let folder;
   logExport('开始切割 · 版本 '+app.getVersion()+' · 源文件 '+input);
   try{
    const info=await run(['-hide_banner','-nostdin','-i',inputUrl],true);
-   const d=/Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/.exec(info);const duration=d?Number(d[1])*3600+Number(d[2])*60+Number(d[3]):NaN;
-   const plan=parsePlan(text,duration);const audioCodec=/Audio:\s*([\w]+)/.exec(info)?.[1];const audio=state.audio;
+   const sourceDuration=await readDuration(inputUrl);const plan=parsePlan(text,sourceDuration);const audioCodec=/Audio:\s*([\w]+)/.exec(info)?.[1];const audio=state.audio;
    let parent=process.env.CUT_PLAYER_TEST_OUTPUT;
    if(!parent){const choice=await dialog.showOpenDialog(win,{title:'选择片段输出目录',properties:['openDirectory','createDirectory']});if(choice.canceled)return {canceled:true};parent=choice.filePaths[0];}
    if(cancelRequested)throw Error('已停止切割');folder=parent;
-   const ext=path.extname(input).toLowerCase()||'.mp4';let audioCount=0,videoBytes=0;const sourceBytes=fs.statSync(input).size;const size=n=>n>=1073741824?(n/1073741824).toFixed(2)+' GB':(n/1048576).toFixed(2)+' MB';
+   const ext=path.extname(input).toLowerCase()||'.mp4';let audioCount=0,videoBytes=0,videoDuration=0;const sourceBytes=fs.statSync(input).size;const size=n=>n>=1073741824?(n/1073741824).toFixed(2)+' GB':(n/1048576).toFixed(2)+' MB';
    const targets=plan.flatMap(part=>[path.join(folder,part.name+ext),...(audio&&audioCodec?[path.join(folder,part.name+(audioCodec==='aac'?'.aac':'.mka'))]:[])]);
    if(targets.some(target=>path.resolve(target).toLowerCase()===path.resolve(input).toLowerCase()))throw Error('输出文件与源视频重名，请修改 names 或选择其他目录');
    const existing=targets.filter(target=>fs.existsSync(target));if(existing.length){const choice=await dialog.showMessageBox(win,{type:'question',buttons:['取消','覆盖'],defaultId:0,cancelId:0,message:`所选目录有 ${existing.length} 个同名文件，是否覆盖？`});if(choice.response!==1)return {canceled:true};}
@@ -72,10 +73,11 @@ app.whenReady().then(()=>{if(!primary)return;
      const elapsed=Math.floor((Date.now()-started)/1000),length=part.end-part.start,percent=Math.min(99.9,measured.seconds/length*100);
      win.webContents.send('export-progress',`正在导出 ${i+1}/${plan.length}：${part.name} · 本段 ${percent.toFixed(1)}% / ${size(written)} · 已导出视频 ${size(videoBytes+written)} / 原视频 ${size(sourceBytes)} · 已用 ${elapsed} 秒`+(Date.now()-lastAdvance>=30000?' · 等待源视频读取 / 定位，请检查磁盘与输出目录':'')+(measured.speed?' · '+measured.speed:''));
     };
-    const timer=setInterval(report,1000);try{await run(videoArgs(inputUrl,part,output),false,data=>{measured=data;report();});}finally{clearInterval(timer);}videoBytes+=fs.statSync(output).size;win.webContents.send('export-progress',`已导出视频 ${i+1}/${plan.length} · 视频总大小 ${size(videoBytes)} / 原视频 ${size(sourceBytes)}`);
+    const timer=setInterval(report,1000);try{await run(videoArgs(inputUrl,part,output),false,data=>{measured=data;report();});}finally{clearInterval(timer);}videoBytes+=fs.statSync(output).size;const actualDuration=await readDuration(output);videoDuration+=actualDuration;logExport('片段时长 · '+part.name+' · '+actualDuration+' 秒');win.webContents.send('export-progress',`已导出视频 ${i+1}/${plan.length} · 视频总大小 ${size(videoBytes)} / 原视频 ${size(sourceBytes)}`);
     if(audio&&audioCodec){const audioOutput=path.join(folder,part.name+(audioCodec==='aac'?'.aac':'.mka'));await run(audioArgs(output,audioOutput),false,data=>win.webContents.send('export-progress',`正在提取音频 ${i+1}/${plan.length}：${part.name} · ${size(data.bytes)} · 视频总大小 ${size(videoBytes)} / 原视频 ${size(sourceBytes)}`));audioCount++;}
    }
-   return {folder,count:plan.length,audioCount,videoBytes,sourceBytes,noAudio:audio&&!audioCodec};
+   logExport('导出核对 · 视频总时长 '+videoDuration+' 秒 / 原视频 '+sourceDuration+' 秒 · 差值 '+(videoDuration-sourceDuration)+' 秒');
+   return {folder,count:plan.length,audioCount,videoBytes,sourceBytes,videoDuration,sourceDuration,noAudio:audio&&!audioCodec};
   }catch(e){logExport('切割终止：'+e.message);try{requireInput();}catch(missing){e=missing;}if(folder)e.message+='\n已完成或未完成的文件保留在：'+folder;e.message+='\n诊断日志：'+exportLog;throw e;}finally{busy=false;cancelRequested=false;}
  });
  win.on('close',e=>{if(busy){e.preventDefault();dialog.showMessageBox(win,{type:'info',message:'正在导出，请等待任务结束后关闭。'});}});
