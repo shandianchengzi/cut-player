@@ -1,7 +1,8 @@
 // Node's Windows file handles share read/write/delete, unlike Chromium file:// handles.
 // All consumers use this bounded, local range stream so none lock the source file.
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),{randomBytes}=require('node:crypto');
-function createMediaSource(){
+function createMediaSource({highWaterMark=512*1024}={}){
+ if(!Number.isSafeInteger(highWaterMark)||highWaterMark<1||highWaterMark>1024*1024)throw Error('Invalid stream buffer size');
  let server,starting,selected;
  const streams=new Set();
  async function serve(req,res){
@@ -25,7 +26,7 @@ function createMediaSource(){
    if(status===206)headers['Content-Range']=`bytes ${start}-${end}/${size}`;
    res.writeHead(status,headers);
    if(req.method==='HEAD'||!size||res.destroyed){await file.close();file=null;res.end();return;}
-   const stream=file.createReadStream({start,end,highWaterMark:64*1024});file=null;streams.add(stream);
+   const stream=file.createReadStream({start,end,highWaterMark});file=null;streams.add(stream);
    stream.once('close',()=>streams.delete(stream));stream.once('error',()=>res.destroy());
    res.once('close',()=>stream.destroy());stream.pipe(res);
   }catch(e){if(file)await file.close().catch(()=>{});if(!res.headersSent)res.writeHead(e.code==='ENOENT'||e.code==='ENOTDIR'?404:500).end();else res.destroy();}

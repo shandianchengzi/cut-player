@@ -24,8 +24,9 @@ app.whenReady().then(()=>{if(!primary)return;
  mainWindow=win;
  let input,inputUrl,busy=false,cancelRequested=false;
  const {progressParser,localInputOptions}=require('./ffmpeg-progress.cjs');
+ const {sourceInfoArgs,parseSourceInfo}=require('./export-info.cjs');
  const exportLog=path.join(app.getPath('userData'),'exports.log');
- function logExport(text){try{fs.mkdirSync(path.dirname(exportLog),{recursive:true});if(fs.existsSync(exportLog)&&fs.statSync(exportLog).size>1000000)fs.renameSync(exportLog,exportLog+'.previous');fs.appendFileSync(exportLog,new Date().toISOString()+' '+text+'\\n');}catch{}}
+ function logExport(text){try{fs.mkdirSync(path.dirname(exportLog),{recursive:true});if(fs.existsSync(exportLog)&&fs.statSync(exportLog).size>1000000)fs.renameSync(exportLog,exportLog+'.previous');fs.appendFileSync(exportLog,new Date().toISOString()+' '+text+'\n');}catch{}}
  function requireInput(){if(!input)throw Error('请先打开本地视频');try{if(!fs.statSync(input).isFile())throw Error();}catch{throw Error('源视频文件不存在（可能已被删除或移动），请重新打开视频');}}
  require('./updates.cjs').installUpdates(win,()=>busy,save);
  win.webContents.setWindowOpenHandler(()=>({action:'deny'}));win.webContents.on('will-navigate',e=>e.preventDefault());
@@ -54,8 +55,7 @@ app.whenReady().then(()=>{if(!primary)return;
   if(busy)throw Error('正在导出');requireInput();busy=true;cancelRequested=false;let folder;
   logExport('开始切割 · 版本 '+app.getVersion()+' · 源文件 '+input);
   try{
-   const info=await run(['-hide_banner','-nostdin','-i',inputUrl],true);
-   const sourceDuration=await readDuration(inputUrl);const plan=parsePlan(text,sourceDuration);const audioCodec=/Audio:\s*([\w]+)/.exec(info)?.[1];const audio=state.audio;
+   const {duration:sourceDuration,audioCodec}=parseSourceInfo(await run(sourceInfoArgs(inputUrl),false,undefined,ffprobe));const plan=parsePlan(text,sourceDuration);const audio=state.audio;
    let parent=process.env.CUT_PLAYER_TEST_OUTPUT;
    if(!parent){const choice=await dialog.showOpenDialog(win,{title:'选择片段输出目录',properties:['openDirectory','createDirectory']});if(choice.canceled)return {canceled:true};parent=choice.filePaths[0];}
    if(cancelRequested)throw Error('已停止切割');folder=parent;
@@ -75,7 +75,7 @@ app.whenReady().then(()=>{if(!primary)return;
      const elapsed=Math.floor((Date.now()-started)/1000),length=part.end-part.start,percent=Math.min(99.9,measured.seconds/length*100);
      win.webContents.send('export-progress',`正在导出 ${i+1}/${plan.length}：${part.name} · 本段 ${percent.toFixed(1)}% / ${size(written)} · 已导出视频 ${size(videoBytes+written)} / 原视频 ${size(sourceBytes)}`+durationStatus(Math.min(length,measured.seconds))+` · 已用 ${elapsed} 秒`+(Date.now()-lastAdvance>=30000?' · 等待源视频读取 / 定位，请检查磁盘与输出目录':'')+(measured.speed?' · '+measured.speed:''));
     };
-    const timer=setInterval(report,1000);try{await run(videoArgs(inputUrl,part,output),false,data=>{measured=data;report();});}finally{clearInterval(timer);}videoBytes+=fs.statSync(output).size;const actualDuration=await readDuration(output);videoDuration+=actualDuration;logExport('片段时长 · '+part.name+' · '+actualDuration+' 秒');win.webContents.send('export-progress',`已导出视频 ${i+1}/${plan.length} · 视频总大小 ${size(videoBytes)} / 原视频 ${size(sourceBytes)}`+durationStatus(0));
+    const timer=setInterval(report,1000);try{await run(videoArgs(inputUrl,part,output),false,data=>{measured=data;if(data.ended)report();});}finally{clearInterval(timer);}videoBytes+=fs.statSync(output).size;const actualDuration=await readDuration(output);videoDuration+=actualDuration;logExport('片段时长 · '+part.name+' · '+actualDuration+' 秒');win.webContents.send('export-progress',`已导出视频 ${i+1}/${plan.length} · 视频总大小 ${size(videoBytes)} / 原视频 ${size(sourceBytes)}`+durationStatus(0));
     if(audio&&audioCodec){const audioOutput=path.join(folder,part.name+(audioCodec==='aac'?'.aac':'.mka'));await run(audioArgs(output,audioOutput),false,data=>win.webContents.send('export-progress',`正在提取音频 ${i+1}/${plan.length}：${part.name} · ${size(data.bytes)} · 视频总大小 ${size(videoBytes)} / 原视频 ${size(sourceBytes)}`+durationStatus(0)));audioCount++;}
    }
    logExport('导出核对 · 视频总时长 '+videoDuration+' 秒 / 原视频 '+sourceDuration+' 秒 · 差值 '+(videoDuration-sourceDuration)+' 秒');

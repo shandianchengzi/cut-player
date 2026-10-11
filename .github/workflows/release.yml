@@ -34,6 +34,12 @@ jobs:
         run: |
           Invoke-WebRequest 'https://github.com/eugeneware/ffmpeg-static/releases/download/b6.1.1/ffprobe-win32-x64' -OutFile node_modules/ffmpeg-static/ffprobe.exe
       - run: npm test
+      - name: Verify export equivalence and measure throughput
+        shell: pwsh
+        run: |
+          node scripts/export-benchmark.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Export equivalence benchmark failed' }
+          Get-Content dist/export-performance.json
       - name: Desktop playback and keyboard smoke test
         run: |
           New-Item -ItemType Directory -Force dist
@@ -94,6 +100,7 @@ jobs:
             dist/*.blockmap
             dist/app-check.png
             dist/performance-*.json
+            dist/export-performance.json
           if-no-files-found: error
       - name: Publish versioned release
         shell: pwsh

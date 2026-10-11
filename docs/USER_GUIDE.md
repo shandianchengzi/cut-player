@@ -1,6 +1,6 @@
 # Cut Player 使用指南
 
-对应当前发布版本 **v1.5.16**。[在线介绍](https://shandianchengzi.github.io/cut-player/) · [README](../README.md) · [故障排查](TROUBLESHOOTING.md)
+对应当前发布版本 **v1.5.17**。[在线介绍](https://shandianchengzi.github.io/cut-player/) · [README](../README.md) · [故障排查](TROUBLESHOOTING.md)
 
 ## 1. 安装与打开视频
 
@@ -160,4 +160,4 @@ v1.5.11 起允许在播放、分析或切割读取源视频期间，从资源管
 
 ## 11. 大视频导出与停止
 
-v1.5.16 按秒显示本段进度、写入大小、累计视频大小和耗时。30 秒未观察到写入 / 时间推进时提示等待读取或定位。「停止切割」结束任务，保留已完成及部分输出。本机 HTTP 读取绕过代理，单次读取超时 60 秒时报错。日志位于 userData 下的 `exports.log`，失败提示给出路径。
+v1.5.17 按秒显示本段进度、写入大小、累计视频大小和耗时。30 秒未观察到写入 / 时间推进时提示等待读取或定位。「停止切割」结束任务，保留已完成及部分输出。本机 HTTP 读取绕过代理，单次读取超时 60 秒时报错。日志位于 userData 下的 `exports.log`，失败提示给出路径。

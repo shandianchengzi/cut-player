@@ -1,6 +1,6 @@
 # Cut Player
 
-Windows 本地视频时间记录与无损分段工具。当前发布版本：**v1.5.16**。
+Windows 本地视频时间记录与无损分段工具。当前发布版本：**v1.5.17**。
 
 [介绍与使用方法](https://shandianchengzi.github.io/cut-player/) · [下载最新版](https://github.com/shandianchengzi/cut-player/releases/latest) · [备用下载](https://shandianchengzi.github.io/cut-player/updates/) · [版本记录](CHANGELOG.md)
 

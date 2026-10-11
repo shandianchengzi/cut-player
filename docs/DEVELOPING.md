@@ -98,3 +98,7 @@ node scripts/open-file-smoke.cjs
 项目独立实现 HTMLVideoElement 桌面播放器，未使用 tiny-player 源码或发布其包。
 
 导出实时状态由 `app/ffmpeg-progress.cjs` 解析 FFmpeg progress 协议；本机输入选项由同模块明确设置代理绕过和读取超时。保留输出端定位及 -c copy，不以进度优化改变切割语义。停止任务时保留部分文件，日志为 userData 下的 exports.log。
+
+## 导出性能与一致性
+
+运行 `node scripts/export-benchmark.cjs`（也可依次传入 FFmpeg、FFprobe 路径和 JSON 输出路径）。交替比较 64 KiB 与 512 KiB 本机流读取及优化前后信息读取，对 MP4 / MKV、多音轨、无音轨样本进行毫秒切割与音频提取。普通输出比较完整 SHA256；MKV 含随机容器标识，比较媒体包数据哈希、时间戳、轨道和时长。Windows 发布流程也运行此基准，`export-performance.json` 保存在构建产物中。小样本及缓存环境结果不等于用户大文件的实测速度。
