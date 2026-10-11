@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Cut Player v1.5.17：Windows 本地视频时间记录、波形逐帧定位、名称整理与无损分段。下载与完整使用说明。">
+<meta name="description" content="Cut Player v1.5.18：Windows 本地视频时间记录、波形逐帧定位、名称整理与无损分段。下载与完整使用说明。">
 <title>Cut Player · 本地视频记录与无损分段</title>
 <link rel="stylesheet" href="site.css">
 </head>
 <body>
 <nav aria-label="主导航"><a class="brand" href="#">◉ Cut Player</a><div><a href="#guide">使用方法</a><a href="#faq">常见问题</a><a href="https://github.com/shandianchengzi/cut-player">GitHub ↗</a></div></nav>
 <main>
-<div class="badge">v1.5.17 · WINDOWS 10 / 11 · X64 · 本地视频</div>
+<div class="badge">v1.5.18 · WINDOWS 10 / 11 · X64 · 本地视频</div>
 <h1>找到这一刻。<br><em>记下来，切出来。</em></h1>
 <p class="lead">边看视频边记录断点，按拍摄时间与曲名整理片段。<br>从波形定位到无损导出，在一个窗口里完成。</p>
 <div class="actions"><a class="primary" href="https://github.com/shandianchengzi/cut-player/releases/latest">下载 Windows 安装版 ↓</a><a href="updates/">备用下载 →</a><a href="#guide">开始使用 →</a></div>
@@ -33,7 +33,7 @@ names:video_20260926_202424x,video_20260926_202434x,video_20260926_202547x</pre>
 
 <section id="guide">
 <h2>从打开视频到导出片段</h2>
-<p class="section-lead">当前用法对应 v1.5.17。<a href="https://github.com/shandianchengzi/cut-player/blob/main/docs/USER_GUIDE.md">完整使用指南 ↗</a> · <a href="https://github.com/shandianchengzi/cut-player/blob/main/docs/TROUBLESHOOTING.md">故障排查 ↗</a></p>
+<p class="section-lead">当前用法对应 v1.5.18。<a href="https://github.com/shandianchengzi/cut-player/blob/main/docs/USER_GUIDE.md">完整使用指南 ↗</a> · <a href="https://github.com/shandianchengzi/cut-player/blob/main/docs/TROUBLESHOOTING.md">故障排查 ↗</a></p>
 <div class="contents" aria-label="使用方法目录"><a href="#open">01 打开</a><a href="#controls">02 定位</a><a href="#notes">03 记录</a><a href="#names">04 命名</a><a href="#edit">05 修复结构</a><a href="#export">06 导出</a><a href="#updates">07 更新</a></div>
 <article class="guide-step" id="open"><div class="step-label">01 / 打开视频</div><h3>安装后，用你习惯的方式打开</h3><p>下载 Setup.exe 安装包，运行安装后通过新建的桌面或开始菜单快捷方式启动。点击「打开视频」、把视频拖到窗口，或在 Windows 右键「打开方式」中选择已安装的 Cut Player.exe。</p><p>程序已运行时，新文件交给原窗口处理。右侧已有非空记录时，先确认是否重置；「取消」保留原视频和文本，「继续打开」生成新视频的初始记录。需要保留的内容请先复制。</p><p class="callout">旧便携版已停止发布。请手动安装 Setup.exe，并改用新的快捷方式，原本机数据目录会沿用。安装器不会自动接管所有视频的默认打开方式。</p></article>
 
@@ -64,7 +64,7 @@ names:video_20260926_202424x,video_20260926_202434x,video_20260926_202547x</pre>
 
 <article class="guide-step" id="export"><div class="step-label">06 / 无损分段</div><h3>选一个目录，按 names 导出全部片段</h3><p>点击「切割」选择输出目录。视频直接写入该文件夹，依次导出 0 → 第一断点、相邻断点之间、最后断点 → 视频末尾；没有断点就导出整段。视频保留原容器，复制视频和音轨。</p><p>默认勾选「同时导出无损音频」，提取每段第一条音轨：AAC 输出 .aac，其他编码输出 .mka；无音轨跳过并提示。可取消勾选，仅导出视频。</p><p>状态按秒显示本段进度、当前写入大小、累计视频大小、源视频大小及耗时，并实时显示已导出视频总时长 / 总时长；导出中可用「停止切割」结束任务并保留输出。长时间不推进会提示等待读取，失败详情记录在 exports.log。状态显示片段进度、已导出视频总大小和原视频大小，视频总和不含独立音频。完成后读取各段实际时长，显示视频总时长、原视频时长及秒数差值，精确到毫秒；逐段和总计写入日志。同名输出先询问覆盖，不能覆盖源视频；名称须符合 Windows 文件规则且不能重复。</p><p class="callout">全部导出使用 -c copy，不重新编码，切点受关键帧限制。导出期间需等待完成后切换视频或关闭窗口；失败时已生成或未完成的文件保留在提示目录。</p></article>
 
-<article class="guide-step" id="updates"><div class="step-label">07 / 更新与数据</div><h3>断线可重试，也可手动覆盖安装</h3><p>「帮助 → 检查版本更新」手动发起检查。GitHub 连接失败会重试并切换 Pages 备用源；下载保留部分文件，服务器支持时续传，不支持 Range 时重新完整下载。安装包通过 SHA-512 校验后自动安装重启；正在切割时等待结束。</p><p>仍然失败可在提示框或帮助菜单选择「浏览器下载最新版」或「备用下载页」。下载 Setup.exe 后关闭播放器并覆盖安装，配置和记录沿用本机数据目录。</p><p>通常目录为 %APPDATA%/cut-player/：config.json 保存配置、localStorage 保存文本、analysis-cache 保存分析缓存、updates.log 保存更新日志。关闭应用后可备份整个目录。记录不是逐视频历史档案，打开新视频、初始化或重置会改写它，请先复制需要保留的内容。</p></article>
+<article class="guide-step" id="updates"><div class="step-label">07 / 更新与数据</div><h3>断线可重试，也可手动覆盖安装</h3><p>「帮助 → 检查版本更新」手动发起检查。GitHub 连接失败会重试并切换 Pages 备用源；下载保留部分文件，服务器支持时续传，不支持 Range 时重新完整下载。v1.5.18 起优先差分下载，复用旧安装包缓存，失败自动回退完整下载；旧客户端升级到本版仍为完整下载，后续更新才会尝试差分。安装包通过 SHA-512 校验后自动安装重启；正在切割时等待结束。</p><p>仍然失败可在提示框或帮助菜单选择「浏览器下载最新版」或「备用下载页」。下载 Setup.exe 后关闭播放器并覆盖安装，配置和记录沿用本机数据目录。</p><p>通常目录为 %APPDATA%/cut-player/：config.json 保存配置、localStorage 保存文本、analysis-cache 保存分析缓存、updates.log 保存更新日志。关闭应用后可备份整个目录。记录不是逐视频历史档案，打开新视频、初始化或重置会改写它，请先复制需要保留的内容。</p></article>
 </section>
 
 <section id="faq">
@@ -77,6 +77,6 @@ names:video_20260926_202424x,video_20260926_202434x,video_20260926_202547x</pre>
 </section>
 <section id="about"><h2>关于 Cut Player</h2><p>作者：shandianchengzi。在程序菜单「关于 → 关于 Cut Player」可查看实际运行版本、许可和商业授权说明、源码仓库及随包许可位置，并用按钮打开源码或授权页面。</p></section><section id="license"><h2>免费非商用，商用另行授权</h2><p>自 v1.5.12 起，应用代码采用 PolyForm Noncommercial 1.0.0，许可范围内的非商业用途免费；超出范围的商业用途须提前取得单独的付费书面授权。免费用途以许可证原文为准。此为源码可见的非商业许可，不属于 OSI 定义的开源许可证。</p><p>v1.5.11 及更早已按 MIT 发布的版本保留原有权利；换许可证不追溯撤销旧授权。第三方组件继续遵循自己的许可证。商业使用许可不等于版权转让，项目收购另行协商。</p><p><a href="https://github.com/shandianchengzi/cut-player/blob/main/LICENSE">许可证原文 ↗</a> · <a href="https://github.com/shandianchengzi/cut-player/blob/main/COMMERCIAL-LICENSE.md">商业授权与收购 ↗</a> · <a href="https://github.com/shandianchengzi/cut-player/blob/main/LICENSE-NOTICE.md">许可边界 ↗</a></p></section><section class="resources"><h2>文档与源码</h2><div class="resource-links"><a href="https://github.com/shandianchengzi/cut-player/blob/main/docs/USER_GUIDE.md">完整使用指南 ↗</a><a href="https://github.com/shandianchengzi/cut-player/blob/main/docs/TROUBLESHOOTING.md">故障排查 ↗</a><a href="https://github.com/shandianchengzi/cut-player/blob/main/docs/DEVELOPING.md">开发与维护 ↗</a><a href="https://github.com/shandianchengzi/cut-player/blob/main/README.md">README ↗</a><a href="https://github.com/shandianchengzi/cut-player/releases">所有版本 ↗</a></div></section>
 </main>
-<footer>Cut Player · 当前说明 v1.5.17 · <a href="https://github.com/shandianchengzi/cut-player">项目源码</a> · <a href="updates/">备用下载</a></footer>
+<footer>Cut Player · 当前说明 v1.5.18 · <a href="https://github.com/shandianchengzi/cut-player">项目源码</a> · <a href="updates/">备用下载</a></footer>
 </body>
 </html>

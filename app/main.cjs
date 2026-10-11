@@ -43,11 +43,11 @@ app.whenReady().then(()=>{if(!primary)return;
   if(cancelRequested){reject(Error('已停止切割'));return;}
   const at=args.indexOf('-i');if(at>=0)args=[...args.slice(0,at),...localInputOptions(args[at+1]),...args.slice(at)];
   if(onProgress)args=['-progress','pipe:1','-stats_period','1','-nostats',...args];
-  let log='',stdout='',finished=false;const child=spawn(executable,args,{windowsHide:true,shell:false,stdio:['ignore',onProgress||executable===ffprobe?'pipe':'ignore','pipe']});activeChild=child;
+  let log='',stdout='',finished=false;const runStarted=Date.now();const child=spawn(executable,args,{windowsHide:true,shell:false,stdio:['ignore',onProgress||executable===ffprobe?'pipe':'ignore','pipe']});activeChild=child;
   if(onProgress)child.stdout.on('data',progressParser(onProgress));
   else if(executable===ffprobe)child.stdout.on('data',chunk=>stdout=(stdout+chunk.toString()).slice(-8192));
   child.stderr.on('data',chunk=>log=(log+chunk.toString()).slice(-24000));
-  function done(error){if(finished)return;finished=true;if(activeChild===child)activeChild=undefined;logExport((error?error.message:'FFmpeg 完成')+'\n'+log);if(error)reject(error);else resolve(executable===ffprobe?stdout:log);}
+  function done(error){if(finished)return;finished=true;if(activeChild===child)activeChild=undefined;logExport((error?error.message:(executable===ffprobe?'FFprobe 完成':'FFmpeg 完成'))+' · 耗时 '+((Date.now()-runStarted)/1000).toFixed(3)+' 秒\n'+log);if(error)reject(error);else resolve(executable===ffprobe?stdout:log);}
   child.once('error',e=>done(e));child.once('close',code=>done(cancelRequested?Error('已停止切割'):code===0||probe?null:Error('FFmpeg 导出失败：'+log.slice(-1800))));
  });}
  async function readDuration(file){const value=await run(['-v','error','-show_entries','format=duration','-of','default=noprint_wrappers=1:nokey=1','-i',file],false,undefined,ffprobe);const seconds=Number(value.trim());if(!value.trim()||!Number.isFinite(seconds)||seconds<=0)throw Error('无法核对视频时长：'+file);return seconds;}
@@ -73,9 +73,9 @@ app.whenReady().then(()=>{if(!primary)return;
     const started=Date.now();let measured={seconds:0,bytes:0,speed:''},lastAdvance=started,lastBytes=0,lastTime=0;
     const report=()=>{let written=0;try{written=fs.statSync(output).size;}catch{}written=Math.max(written,measured.bytes);if(written!==lastBytes||measured.seconds!==lastTime){lastAdvance=Date.now();lastBytes=written;lastTime=measured.seconds;}
      const elapsed=Math.floor((Date.now()-started)/1000),length=part.end-part.start,percent=Math.min(99.9,measured.seconds/length*100);
-     win.webContents.send('export-progress',`正在导出 ${i+1}/${plan.length}：${part.name} · 本段 ${percent.toFixed(1)}% / ${size(written)} · 已导出视频 ${size(videoBytes+written)} / 原视频 ${size(sourceBytes)}`+durationStatus(Math.min(length,measured.seconds))+` · 已用 ${elapsed} 秒`+(Date.now()-lastAdvance>=30000?' · 等待源视频读取 / 定位，请检查磁盘与输出目录':'')+(measured.speed?' · '+measured.speed:''));
+     win.webContents.send('export-progress',`正在导出 ${i+1}/${plan.length}：${part.name} · 本段 ${percent.toFixed(1)}% / ${size(written)} · 已导出视频 ${size(videoBytes+written)} / 原视频 ${size(sourceBytes)}`+durationStatus(Math.min(length,measured.seconds))+` · 已用 ${elapsed} 秒`+(measured.ended?' · FFmpeg 已报告媒体输出结束，等待进程退出':measured.seconds>=length*.999?' · 已到本段末尾，等待 FFmpeg 完成写入':'')+(Date.now()-lastAdvance>=30000?' · 30 秒未观察到写入或时间推进，FFmpeg 仍在运行':'')+(measured.speed?' · '+measured.speed:''));
     };
-    const timer=setInterval(report,1000);try{await run(videoArgs(inputUrl,part,output),false,data=>{measured=data;if(data.ended)report();});}finally{clearInterval(timer);}videoBytes+=fs.statSync(output).size;const actualDuration=await readDuration(output);videoDuration+=actualDuration;logExport('片段时长 · '+part.name+' · '+actualDuration+' 秒');win.webContents.send('export-progress',`已导出视频 ${i+1}/${plan.length} · 视频总大小 ${size(videoBytes)} / 原视频 ${size(sourceBytes)}`+durationStatus(0));
+    const timer=setInterval(report,1000);try{await run(videoArgs(inputUrl,part,output),false,data=>{measured=data;if(data.ended)report();});}finally{clearInterval(timer);}videoBytes+=fs.statSync(output).size;win.webContents.send('export-progress',`视频写入完成 ${i+1}/${plan.length}：${part.name} · 正在核对文件时长`+durationStatus(0));const actualDuration=await readDuration(output);videoDuration+=actualDuration;logExport('片段时长 · '+part.name+' · '+actualDuration+' 秒');win.webContents.send('export-progress',`已导出视频 ${i+1}/${plan.length} · 视频总大小 ${size(videoBytes)} / 原视频 ${size(sourceBytes)}`+durationStatus(0));
     if(audio&&audioCodec){const audioOutput=path.join(folder,part.name+(audioCodec==='aac'?'.aac':'.mka'));await run(audioArgs(output,audioOutput),false,data=>win.webContents.send('export-progress',`正在提取音频 ${i+1}/${plan.length}：${part.name} · ${size(data.bytes)} · 视频总大小 ${size(videoBytes)} / 原视频 ${size(sourceBytes)}`+durationStatus(0)));audioCount++;}
    }
    logExport('导出核对 · 视频总时长 '+videoDuration+' 秒 / 原视频 '+sourceDuration+' 秒 · 差值 '+(videoDuration-sourceDuration)+' 秒');

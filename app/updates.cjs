@@ -5,19 +5,17 @@ function installUpdates(win,isBusy,save){
  const logPath=path.join(app.getPath('userData'),'updates.log');
  function log(message){try{fs.mkdirSync(path.dirname(logPath),{recursive:true});if(fs.existsSync(logPath)&&fs.statSync(logPath).size>1000000)fs.renameSync(logPath,logPath+'.previous');fs.appendFileSync(logPath,new Date().toISOString()+' '+message+'\n');}catch{}}
  const say=s=>{log(s);if(!win.isDestroyed())win.webContents.send('update-state',s);};
- let autoUpdater;
+ let autoUpdater,downloadLabel=()=> '更新';
  const backup='https://shandianchengzi.github.io/cut-player/updates/';
  function ensureUpdater(){if(autoUpdater)return;
  autoUpdater=require('electron-updater').autoUpdater;autoUpdater.autoDownload=false;autoUpdater.autoInstallOnAppQuit=false;
- autoUpdater.logger={info:log,warn:log,error:log,debug:()=>{}};
- autoUpdater.disableDifferentialDownload=true;autoUpdater.httpExecutor.cachedSession=win.webContents.session;
- const {resumableDownload}=require('./update-download.cjs');
- autoUpdater.httpExecutor.download=(url,destination,options)=>resumableDownload(url,destination,options,{cacheDir:path.join(app.getPath('userData'),'update-downloads'),fallback:backup+path.basename(new URL(String(url)).pathname),say,request:(url,headers)=>net.request({url,headers,session:win.webContents.session})});
+ autoUpdater.httpExecutor.cachedSession=win.webContents.session;
+ downloadLabel=require('./update-mode.cjs').configureUpdateDownloads(autoUpdater,{cacheDir:path.join(app.getPath('userData'),'update-downloads'),fallbackBase:backup,say,log,request:(url,headers)=>net.request({url,headers,session:win.webContents.session})});
 
  autoUpdater.on('error',e=>log('updater error: '+e.message));
  autoUpdater.on('update-not-available',()=>{checking=false;say('当前已是最新版 '+app.getVersion());});
  autoUpdater.on('update-available',()=>say('发现新版安装包，准备后台下载…'));
- autoUpdater.on('download-progress',p=>say(`正在下载更新：${Math.round(p.percent)}%`));
+ autoUpdater.on('download-progress',p=>say(`正在下载${downloadLabel()}：${Math.round(p.percent)}%`));
  autoUpdater.on('update-downloaded',()=>{checking=false;pending=true;finish();});
  }
  async function failure(e){checking=false;pending=false;say('更新失败：'+e.message+'（详情：'+logPath+'）');const choice=await dialog.showMessageBox(win,{type:'warning',message:'网络更新失败',detail:'已下载部分已保留，下次检查会尝试续传。也可通过浏览器下载安装包覆盖安装，配置会保留。',buttons:['稍后重试','浏览器下载','备用下载页'],defaultId:0,cancelId:0});if(choice.response===1)await shell.openExternal('https://github.com/shandianchengzi/cut-player/releases/latest');if(choice.response===2)await shell.openExternal('https://shandianchengzi.github.io/cut-player/updates/');}

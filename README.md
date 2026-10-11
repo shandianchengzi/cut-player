@@ -1,6 +1,6 @@
 # Cut Player
 
-Windows 本地视频时间记录与无损分段工具。当前发布版本：**v1.5.17**。
+Windows 本地视频时间记录与无损分段工具。当前发布版本：**v1.5.18**。
 
 [介绍与使用方法](https://shandianchengzi.github.io/cut-player/) · [下载最新版](https://github.com/shandianchengzi/cut-player/releases/latest) · [备用下载](https://shandianchengzi.github.io/cut-player/updates/) · [版本记录](CHANGELOG.md)
 
@@ -95,3 +95,5 @@ FFmpeg 及相关第三方信息见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.
 ## 大视频切割进度
 
 导出时每秒显示当前片段进度、当前写入大小、累计视频大小及耗时，音频提取单独显示状态。「停止切割」可结束当前任务，已完成和部分输出保留。本机视频流明确绕过 HTTP 代理，单次读取等待超过 60 秒时报错。长时间没有写入 / 时间推进时显示等待读取提示；诊断信息保存在 userData 下的 `exports.log`，失败提示给出日志路径。
+
+更新优先使用差分下载，复用本机旧安装包并校验重建结果；不可用时自动回退完整包，保留续传、重试和备用源。升级到 v1.5.18 的旧客户端仍下载完整包，安装本版后后续升级才会尝试差分。

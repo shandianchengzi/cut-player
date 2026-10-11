@@ -58,6 +58,14 @@ jobs:
       - run: npm run dist
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Verify real installer differential reconstruction
+        shell: pwsh
+        run: |
+          $version = node -p "require('./package.json').version"
+          Invoke-WebRequest 'https://github.com/shandianchengzi/cut-player/releases/download/v1.5.17/Cut-Player-1.5.17-x64-Setup.exe' -OutFile "$env:RUNNER_TEMP/diff-old.exe"
+          Invoke-WebRequest 'https://github.com/shandianchengzi/cut-player/releases/download/v1.5.17/Cut-Player-1.5.17-x64-Setup.exe.blockmap' -OutFile "$env:RUNNER_TEMP/diff-old.blockmap"
+          node scripts/differential-benchmark.cjs "$env:RUNNER_TEMP/diff-old.exe" "$env:RUNNER_TEMP/diff-old.blockmap" "dist/Cut-Player-$version-x64-Setup.exe" "dist/Cut-Player-$version-x64-Setup.exe.blockmap"
+          if ($LASTEXITCODE -ne 0) { throw 'Real installer differential verification failed' }
       - name: Verify bundled executable and FFmpeg
         run: |
           $env:CUT_PLAYER_PACKAGED_EXE = Join-Path $PWD 'dist/win-unpacked/Cut Player.exe'
@@ -101,6 +109,7 @@ jobs:
             dist/app-check.png
             dist/performance-*.json
             dist/export-performance.json
+            dist/update-performance.json
           if-no-files-found: error
       - name: Publish versioned release
         shell: pwsh
@@ -123,10 +132,15 @@ jobs:
 
       - name: Prepare independent Pages update downloads
         shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           New-Item -ItemType Directory -Force docs/updates
           Copy-Item dist/*-Setup.exe docs/updates/
           Copy-Item dist/latest.yml docs/updates/latest.yml
+          Copy-Item dist/*.blockmap docs/updates/
+          node scripts/stage-blockmaps.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Backup blockmap staging failed' }
           $installer = (Get-ChildItem docs/updates/*-Setup.exe).Name
           Set-Content docs/updates/index.html "<html lang='zh-CN'><meta charset='utf-8'><title>Cut Player 下载</title><h1>Cut Player 最新安装版</h1><a href='$installer'>下载安装包</a><p>下载后关闭播放器，运行安装包覆盖安装。配置保留。</p></html>" -Encoding utf8
       - uses: actions/configure-pages@v5
