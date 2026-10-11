@@ -60,21 +60,23 @@ app.whenReady().then(()=>{if(!primary)return;
    if(!parent){const choice=await dialog.showOpenDialog(win,{title:'选择片段输出目录',properties:['openDirectory','createDirectory']});if(choice.canceled)return {canceled:true};parent=choice.filePaths[0];}
    if(cancelRequested)throw Error('已停止切割');folder=parent;
    const ext=path.extname(input).toLowerCase()||'.mp4';let audioCount=0,videoBytes=0,videoDuration=0;const sourceBytes=fs.statSync(input).size;const size=n=>n>=1073741824?(n/1073741824).toFixed(2)+' GB':(n/1048576).toFixed(2)+' MB';
+   const time=n=>{const ms=Math.round(n*1000);return String(Math.floor(ms/3600000)).padStart(2,'0')+':'+String(Math.floor(ms/60000)%60).padStart(2,'0')+':'+String(Math.floor(ms/1000)%60).padStart(2,'0')+'.'+String(ms%1000).padStart(3,'0');};
+   const durationStatus=current=>' · 已导出视频总时长 '+time(videoDuration+current)+' / 总时长 '+time(sourceDuration);
    const targets=plan.flatMap(part=>[path.join(folder,part.name+ext),...(audio&&audioCodec?[path.join(folder,part.name+(audioCodec==='aac'?'.aac':'.mka'))]:[])]);
    if(targets.some(target=>path.resolve(target).toLowerCase()===path.resolve(input).toLowerCase()))throw Error('输出文件与源视频重名，请修改 names 或选择其他目录');
    const existing=targets.filter(target=>fs.existsSync(target));if(existing.length){const choice=await dialog.showMessageBox(win,{type:'question',buttons:['取消','覆盖'],defaultId:0,cancelId:0,message:`所选目录有 ${existing.length} 个同名文件，是否覆盖？`});if(choice.response!==1)return {canceled:true};}
 
    for(let i=0;i<plan.length;i++){
     const part=plan[i],output=path.join(folder,part.name+ext);
-    win.webContents.send('export-progress',`正在导出 ${i+1}/${plan.length}：${part.name} · 已导出视频 ${size(videoBytes)} / 原视频 ${size(sourceBytes)}`);
+    win.webContents.send('export-progress',`正在导出 ${i+1}/${plan.length}：${part.name} · 已导出视频 ${size(videoBytes)} / 原视频 ${size(sourceBytes)}`+durationStatus(0));
     requireInput();
     const started=Date.now();let measured={seconds:0,bytes:0,speed:''},lastAdvance=started,lastBytes=0,lastTime=0;
     const report=()=>{let written=0;try{written=fs.statSync(output).size;}catch{}written=Math.max(written,measured.bytes);if(written!==lastBytes||measured.seconds!==lastTime){lastAdvance=Date.now();lastBytes=written;lastTime=measured.seconds;}
      const elapsed=Math.floor((Date.now()-started)/1000),length=part.end-part.start,percent=Math.min(99.9,measured.seconds/length*100);
-     win.webContents.send('export-progress',`正在导出 ${i+1}/${plan.length}：${part.name} · 本段 ${percent.toFixed(1)}% / ${size(written)} · 已导出视频 ${size(videoBytes+written)} / 原视频 ${size(sourceBytes)} · 已用 ${elapsed} 秒`+(Date.now()-lastAdvance>=30000?' · 等待源视频读取 / 定位，请检查磁盘与输出目录':'')+(measured.speed?' · '+measured.speed:''));
+     win.webContents.send('export-progress',`正在导出 ${i+1}/${plan.length}：${part.name} · 本段 ${percent.toFixed(1)}% / ${size(written)} · 已导出视频 ${size(videoBytes+written)} / 原视频 ${size(sourceBytes)}`+durationStatus(Math.min(length,measured.seconds))+` · 已用 ${elapsed} 秒`+(Date.now()-lastAdvance>=30000?' · 等待源视频读取 / 定位，请检查磁盘与输出目录':'')+(measured.speed?' · '+measured.speed:''));
     };
-    const timer=setInterval(report,1000);try{await run(videoArgs(inputUrl,part,output),false,data=>{measured=data;report();});}finally{clearInterval(timer);}videoBytes+=fs.statSync(output).size;const actualDuration=await readDuration(output);videoDuration+=actualDuration;logExport('片段时长 · '+part.name+' · '+actualDuration+' 秒');win.webContents.send('export-progress',`已导出视频 ${i+1}/${plan.length} · 视频总大小 ${size(videoBytes)} / 原视频 ${size(sourceBytes)}`);
-    if(audio&&audioCodec){const audioOutput=path.join(folder,part.name+(audioCodec==='aac'?'.aac':'.mka'));await run(audioArgs(output,audioOutput),false,data=>win.webContents.send('export-progress',`正在提取音频 ${i+1}/${plan.length}：${part.name} · ${size(data.bytes)} · 视频总大小 ${size(videoBytes)} / 原视频 ${size(sourceBytes)}`));audioCount++;}
+    const timer=setInterval(report,1000);try{await run(videoArgs(inputUrl,part,output),false,data=>{measured=data;report();});}finally{clearInterval(timer);}videoBytes+=fs.statSync(output).size;const actualDuration=await readDuration(output);videoDuration+=actualDuration;logExport('片段时长 · '+part.name+' · '+actualDuration+' 秒');win.webContents.send('export-progress',`已导出视频 ${i+1}/${plan.length} · 视频总大小 ${size(videoBytes)} / 原视频 ${size(sourceBytes)}`+durationStatus(0));
+    if(audio&&audioCodec){const audioOutput=path.join(folder,part.name+(audioCodec==='aac'?'.aac':'.mka'));await run(audioArgs(output,audioOutput),false,data=>win.webContents.send('export-progress',`正在提取音频 ${i+1}/${plan.length}：${part.name} · ${size(data.bytes)} · 视频总大小 ${size(videoBytes)} / 原视频 ${size(sourceBytes)}`+durationStatus(0)));audioCount++;}
    }
    logExport('导出核对 · 视频总时长 '+videoDuration+' 秒 / 原视频 '+sourceDuration+' 秒 · 差值 '+(videoDuration-sourceDuration)+' 秒');
    return {folder,count:plan.length,audioCount,videoBytes,sourceBytes,videoDuration,sourceDuration,noAudio:audio&&!audioCodec};
