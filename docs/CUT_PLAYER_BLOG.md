@@ -11,6 +11,7 @@
 - **软件下载：**[GitHub Releases（最新版 Windows 安装包）](https://github.com/shandianchengzi/cut-player/releases/latest)
 - **介绍与使用指南：**[Cut Player 网页](https://shandianchengzi.github.io/cut-player/)
 - **源代码与问题反馈：**[GitHub 仓库](https://github.com/shandianchengzi/cut-player)
+- **CSDN 已发布文章：**[Cut Player 工具博客](https://shandianchengzi.blog.csdn.net/article/details/167817483)
 
 <!-- cutplayer-screenshots:start -->
 
