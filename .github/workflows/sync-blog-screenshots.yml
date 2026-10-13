@@ -8,6 +8,7 @@ on:
       - '.github/workflows/sync-blog-screenshots.yml'
 permissions:
   contents: write
+  actions: read
 
 concurrency:
   group: sync-cut-player-screenshots
