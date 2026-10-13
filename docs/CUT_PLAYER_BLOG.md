@@ -12,6 +12,17 @@
 - **介绍与使用指南：**[Cut Player 网页](https://shandianchengzi.github.io/cut-player/)
 - **源代码与问题反馈：**[GitHub 仓库](https://github.com/shandianchengzi/cut-player)
 
+<!-- cutplayer-screenshots:start -->
+
+## 软件实际运行界面
+
+下面是 Cut Player 在 Windows 桌面自动化测试中生成的实际应用截图；使用的是测试素材。
+
+![Cut Player 运行界面截图 1](https://raw.githubusercontent.com/shandianchengzi/cut-player/main/docs/images/cut-player-desktop-ci.png)
+
+<!-- cutplayer-screenshots:end -->
+
+
 ## 从 Quicker 小工具，到一个真正能边看边切的播放器
 
 最早我其实没有打算单独开发播放器。当时已经用 Quicker 写了一个简单的离线分片工具，最终也是调用 FFmpeg 切割。麻烦的是，**切割之前的工作完全不连贯**。
