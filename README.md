@@ -4,6 +4,12 @@ Windows 本地视频时间记录与无损分段工具。当前发布版本：**v
 
 [介绍与使用方法](https://shandianchengzi.github.io/cut-player/) · [开发故事与发布博客](docs/CUT_PLAYER_BLOG.md) · [CSDN 正式文章](https://shandianchengzi.blog.csdn.net/article/details/167817483) · [下载最新版](https://github.com/shandianchengzi/cut-player/releases/latest) · [备用下载](https://shandianchengzi.github.io/cut-player/updates/) · [版本记录](CHANGELOG.md)
 
+## 运行界面
+
+![Cut Player Windows 实际运行界面](docs/images/cut-player-desktop-ci.png)
+
+截图来自 v1.5.20 Windows 桌面自动化测试，使用的是测试视频；更多实际使用背景及功能介绍见 [CSDN 正式博客](https://shandianchengzi.blog.csdn.net/article/details/167817483)。
+
 ## 能做什么
 
 - 打开或拖入本地视频，也支持 Windows「打开方式」传入视频；程序已运行时在原窗口接收新文件。
