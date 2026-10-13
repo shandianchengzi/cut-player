@@ -183,11 +183,12 @@ jobs:
           EOF
       - name: Mirror Pages content (large installer excluded)
         continue-on-error: true
-        uses: shandianchengzi/skill/manage-github-pages/cloudflare-backup@4c1bf8604fc78dabb0babc83bfa0e2c1fa645327
-        with:
-          directory: docs
-          project: sdz-cut-player
-          site-prefix: cut-player
-          large-file-policy: skip
-          cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        env:
+          MIRROR_DIR: docs
+          MIRROR_PROJECT: sdz-cut-player
+          MIRROR_PREFIX: cut-player
+          MIRROR_BRANCH: main
+          MIRROR_LARGE_POLICY: skip
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: bash .github/scripts/cloudflare-pages-backup.sh
