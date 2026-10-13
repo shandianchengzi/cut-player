@@ -6,9 +6,9 @@ Windows 本地视频时间记录与无损分段工具。当前发布版本：**v
 
 ## 运行界面
 
-![Cut Player Windows 实际运行界面](docs/images/cut-player-desktop-ci.png)
+![Cut Player Windows 实际运行界面](docs/images/cut-player-ui-real.png)
 
-截图来自 v1.5.20 Windows 桌面自动化测试，使用的是测试视频；更多实际使用背景及功能介绍见 [CSDN 正式博客](https://shandianchengzi.blog.csdn.net/article/details/167817483)。
+截图为 Cut Player 的实际运行界面，展示了演唱会视频播放、音量波形、时间记录与可选片段名称；更多使用背景见 [CSDN 正式博客](https://shandianchengzi.blog.csdn.net/article/details/167817483)。
 
 ## 能做什么
 
