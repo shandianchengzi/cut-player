@@ -17,9 +17,9 @@
 
 ## 软件实际运行界面
 
-下面是 Cut Player 在 Windows 桌面自动化测试中生成的实际应用截图；使用的是测试素材。
+下面是 Cut Player 的实际运行界面，包含视频播放、波形定位、切割时间记录和演唱会曲目快捷命名区域。
 
-![Cut Player 运行界面截图 1](https://raw.githubusercontent.com/shandianchengzi/cut-player/main/docs/images/cut-player-desktop-ci.png)
+![Cut Player 运行界面截图 1](https://raw.githubusercontent.com/shandianchengzi/cut-player/main/docs/images/cut-player-ui-real.png)
 
 <!-- cutplayer-screenshots:end -->
 
