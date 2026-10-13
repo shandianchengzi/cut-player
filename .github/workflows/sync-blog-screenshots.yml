@@ -1,0 +1,64 @@
+name: Sync Cut Player article screenshots
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sync-blog-screenshots.yml'
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-cut-player-screenshots
+  cancel-in-progress: false
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Copy actual CSDN article images into docs
+        id: csdn
+        continue-on-error: true
+        run: python3 .github/tools/sync_csdn_screenshots.py
+
+      - name: Fall back to real Windows application screenshot from successful release CI
+        if: steps.csdn.outcome != 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p docs/images "$RUNNER_TEMP/cut-player-release"
+          gh run download 38403222673 --repo "$GITHUB_REPOSITORY" --name windows-x64 --dir "$RUNNER_TEMP/cut-player-release"
+          test -s "$RUNNER_TEMP/cut-player-release/app-check.png"
+          cp "$RUNNER_TEMP/cut-player-release/app-check.png" docs/images/cut-player-desktop-ci.png
+          python3 - <<'PY'
+          import importlib.util
+          from pathlib import Path
+          spec = importlib.util.spec_from_file_location("sync", ".github/tools/sync_csdn_screenshots.py")
+          mod = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+          mod.update_markdown([Path("docs/images/cut-player-desktop-ci.png")], "ci")
+          PY
+
+      - name: Commit screenshots and GitHub blog updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/images docs/CUT_PLAYER_BLOG.md
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "docs: add real Cut Player screenshot to published blog"
+            git push
+          fi
+      - name: Report screenshot source
+        if: always()
+        run: |
+          if [ "${{ steps.csdn.outcome }}" = "success" ]; then
+            echo "Published CSDN article screenshots were copied." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "CSDN images could not be read. A genuine Windows app screenshot from release CI was used instead." >> "$GITHUB_STEP_SUMMARY"
+          fi
