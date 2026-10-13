@@ -32,6 +32,16 @@ jobs:
           cat > docs/updates/index.html <<EOF
           <!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cut Player 备用下载</title><h1>Cut Player 最新安装版</h1><p><a href="$installer">下载安装包</a></p><p>下载后关闭播放器，运行安装包覆盖安装，配置与记录保留。</p><p><a href="../">介绍与使用方法</a> · <a href="https://github.com/shandianchengzi/cut-player/releases/latest">GitHub 下载</a></p></html>
           EOF
+      - name: Mirror built Pages site to Cloudflare
+        continue-on-error: true
+        uses: shandianchengzi/skill/manage-github-pages/cloudflare-backup@4c1bf8604fc78dabb0babc83bfa0e2c1fa645327
+        with:
+          directory: docs
+          project: sdz-cut-player
+          site-prefix: cut-player
+          large-file-policy: skip
+          cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          cloudflare-account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
