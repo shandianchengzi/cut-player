@@ -1,5 +1,7 @@
 const {contextBridge,ipcRenderer,webUtils}=require('electron');
 contextBridge.exposeInMainWorld('desktop',{
+ describeInputs:files=>ipcRenderer.invoke('describe-inputs',files.map(file=>typeof file==='string'?file:webUtils.getPathForFile(file))),
+ clearInput:()=>ipcRenderer.invoke('clear-input'),
  takeOpenFiles:()=>ipcRenderer.invoke('take-open-files'),
  onOpenFiles:fn=>ipcRenderer.on('open-files-pending',()=>fn()),
  onMediaUpdate:fn=>ipcRenderer.on('media-update',(_e,data)=>fn(data)),

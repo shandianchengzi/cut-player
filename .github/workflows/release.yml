@@ -46,6 +46,9 @@ jobs:
           node scripts/smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Playback smoke test failed' }
           node scripts/open-file-smoke.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Open-file smoke test failed' }
+          node scripts/tabs-smoke.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Tabs smoke test failed' }
       - name: Benchmark previous release
         shell: pwsh
         run: |
@@ -72,6 +75,9 @@ jobs:
           node scripts/smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Playback smoke test failed' }
           node scripts/open-file-smoke.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Open-file smoke test failed' }
+          node scripts/tabs-smoke.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Tabs smoke test failed' }
       - name: Verify actual NSIS installation
         shell: pwsh
         run: |
@@ -91,6 +97,9 @@ jobs:
           node scripts/smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Playback smoke test failed' }
           node scripts/open-file-smoke.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Open-file smoke test failed' }
+          node scripts/tabs-smoke.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Tabs smoke test failed' }
           if ($LASTEXITCODE -ne 0) { throw 'Installed application smoke test failed' }
       - name: Benchmark optimized build
         shell: pwsh
