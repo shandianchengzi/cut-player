@@ -1,6 +1,6 @@
 # Cut Player
 
-Windows 本地视频时间记录与无损分段工具。当前发布版本：**v1.5.19**。
+Windows 本地视频时间记录与无损分段工具。当前发布版本：**v1.5.20**。
 
 [介绍与使用方法](https://shandianchengzi.github.io/cut-player/) · [下载最新版](https://github.com/shandianchengzi/cut-player/releases/latest) · [备用下载](https://shandianchengzi.github.io/cut-player/updates/) · [版本记录](CHANGELOG.md)
 
@@ -98,4 +98,4 @@ FFmpeg 及相关第三方信息见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.
 
 更新优先使用差分下载，复用本机旧安装包并校验重建结果；不可用时自动回退完整包，保留续传、重试和备用源。v1.5.17 及以前客户端首次升级到支持差分的版本仍下载完整包；v1.5.18 起的客户端后续升级优先尝试差分。
 
-多视频标签页：支持多选、拖入和 Windows 多文件打开方式；切割当前标签，导出期间锁定切换 / 关闭，外部打开请求排队到结束。只解码当前视频，并限制分析缓存数量。旧版未关联的暂存文字保留在「未关联记录」标签中。
+多视频标签页：支持多选、拖入和 Windows 多文件打开方式；切割当前标签，导出期间可打开 / 切换 / 关闭标签并编辑下一视频，当前任务固定原视频与记录，一次只运行一个导出。只解码当前视频，并限制分析缓存数量。旧版未关联的暂存文字保留在「未关联记录」标签中。
