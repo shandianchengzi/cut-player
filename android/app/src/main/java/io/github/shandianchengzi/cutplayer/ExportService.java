@@ -14,7 +14,7 @@ public final class ExportService extends Service {
  public static volatile CompletableFuture<Boolean> decision;
  public static volatile WeakReference<Listener> listener=new WeakReference<>(null);
  private static final String CHANNEL="cut-export";private long lastNotification;
- private void update(String text,boolean force){status=text;Listener l=listener.get();if(l!=null)l.onExportState();long now=System.currentTimeMillis();if(force||now-lastNotification>1000){lastNotification=now;getSystemService(NotificationManager.class).notify(1,notification());}}
+ private void update(String text,boolean force){status=text;Listener l=listener.get();if(l!=null)l.onExportState();long now=System.currentTimeMillis();if(force||now-lastNotification>1000){lastNotification=now;if(Build.VERSION.SDK_INT<33||checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)==android.content.pm.PackageManager.PERMISSION_GRANTED)getSystemService(NotificationManager.class).notify(1,notification());}}
  private Notification notification(){
   PendingIntent content=PendingIntent.getActivity(this,0,new Intent(this,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
   PendingIntent stop=PendingIntent.getService(this,1,new Intent(this,ExportService.class).setAction("cancel"),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);

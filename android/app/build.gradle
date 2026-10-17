@@ -1,5 +1,6 @@
 plugins { id 'com.android.application' }
 def productVersion = new groovy.json.JsonSlurper().parse(file('../../package.json')).version
+def versionParts = productVersion.tokenize('.').collect { it as int }
 android {
  namespace 'io.github.shandianchengzi.cutplayer'
  compileSdk 35
@@ -8,7 +9,7 @@ android {
   applicationId 'io.github.shandianchengzi.cutplayer'
   minSdk 26
   targetSdk 35
-  versionCode 10521
+  versionCode versionParts[0] * 1000000 + versionParts[1] * 10000 + versionParts[2]
   versionName productVersion
   testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
   externalNativeBuild { cmake { arguments '-DANDROID_STL=none' } }

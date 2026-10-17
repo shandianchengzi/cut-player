@@ -211,7 +211,10 @@ jobs:
           log-accepted-android-sdk-licenses: false
       - name: Install Android toolchain
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'ndk;28.0.13004108' 'cmake;3.22.1'
-      - uses: actions/cache@v4
+      - name: Validate Java and Android API compatibility
+        run: gradle -p android --no-daemon compileDebugJavaWithJavac testDebugUnitTest lintDebug
+      - uses: actions/cache/restore@v4
+        id: native_cache
         with:
           path: |
             android/app/src/main/jniLibs
@@ -226,6 +229,14 @@ jobs:
         env:
           ANDROID_NDK_HOME: /usr/local/lib/android/sdk/ndk/28.0.13004108
         run: bash android/scripts/build-ffmpeg.sh
+      - uses: actions/cache/save@v4
+        if: steps.native_cache.outputs.cache-hit != 'true'
+        with:
+          path: |
+            android/app/src/main/jniLibs
+            android/dist/ffmpeg-6.1.1-source.tar.xz
+            android/dist/ffmpeg-*-config.*
+          key: android-ffmpeg-6.1.1-ndk28-v1
       - name: Build packet comparison fixtures
         run: |
           sudo apt-get update -qq
