@@ -13,7 +13,7 @@ public final class ExportService extends Service {
  public static volatile String status="就绪",sourceName="";
  public static volatile CompletableFuture<Boolean> decision;
  public static volatile WeakReference<Listener> listener=new WeakReference<>(null);
- private static final String CHANNEL="cut-export";private long lastNotification;
+ private static final String CHANNEL="cut-export";private long lastNotification;private boolean running;
  private void update(String text,boolean force){status=text;Listener l=listener.get();if(l!=null)l.onExportState();long now=System.currentTimeMillis();if(force||now-lastNotification>1000){lastNotification=now;if(Build.VERSION.SDK_INT<33||checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)==android.content.pm.PackageManager.PERMISSION_GRANTED)getSystemService(NotificationManager.class).notify(1,notification());}}
  private Notification notification(){
   PendingIntent content=PendingIntent.getActivity(this,0,new Intent(this,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
@@ -26,7 +26,7 @@ public final class ExportService extends Service {
   if(intent==null)return START_NOT_STICKY;
   if("cancel".equals(intent.getAction())){cancelExport();if(!busy.get())stopSelf();return START_NOT_STICKY;}
   if(!busy.compareAndSet(false,true))return START_NOT_STICKY;
-  cancelled.set(false);sourceName=intent.getStringExtra("name");status="正在读取原视频信息…";
+  running=true;cancelled.set(false);sourceName=intent.getStringExtra("name");status="正在读取原视频信息…";
   if(Build.VERSION.SDK_INT>=29)startForeground(1,notification(),Build.VERSION.SDK_INT>=35?ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROCESSING:ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);else startForeground(1,notification());
   final Uri source=Uri.parse(intent.getStringExtra("source")),tree=Uri.parse(intent.getStringExtra("tree"));final String notes=intent.getStringExtra("notes");final boolean audio=intent.getBooleanExtra("audio",true);
   new Thread(()->{
@@ -37,11 +37,11 @@ public final class ExportService extends Service {
     });
     update("导出 "+sourceName+"\n"+result.summary()+"\n输出目录："+tree,true);
    }catch(Exception e){update((cancelled.get()?"已停止切割":"导出未完成")+" · "+sourceName+"\n"+e.getMessage()+"\n已完成和部分文件保留在所选输出目录",true);}
-   finally{busy.set(false);decision=null;Listener l=listener.get();if(l!=null)l.onExportState();stopForeground(STOP_FOREGROUND_REMOVE);stopSelf(startId);}
+   finally{new Handler(Looper.getMainLooper()).post(()->{running=false;busy.set(false);decision=null;stopForeground(STOP_FOREGROUND_REMOVE);stopSelf(startId);Listener l=listener.get();if(l!=null)l.onExportState();});}
   },"CutPlayerExport").start();
   return START_NOT_STICKY;
  }
  @Override public IBinder onBind(Intent intent){return null;}
- @Override public void onDestroy(){if(busy.get())cancelExport();super.onDestroy();}
+ @Override public void onDestroy(){if(running)cancelExport();super.onDestroy();}
  @Override public void onTimeout(int startId,int type){cancelExport();stopSelf(startId);}
 }

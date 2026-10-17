@@ -32,6 +32,11 @@ public class LosslessTest {
   ExportEngine.Result result=engine.export(doc("silent.mp4"),tree,"breakpoints:\nnames:silent-export",true,s->{},n->true);assertEquals(1,result.count);assertEquals(0,result.audioCount);
   try{engine.export(doc("fixture.mp4"),tree,"breakpoints:\nnames:fixture",false,s->{},n->true);fail("source overwrite allowed");}catch(IOException expected){assertTrue(expected.getMessage().contains("原视频相同"));}
  }
+ @Test public void aliasSourceOverwriteGuard()throws Exception {
+  long before=engine.bytes(doc("fixture.mp4"));
+  try{engine.export(doc("alias.mp4"),tree,"breakpoints:\nnames:fixture",false,s->{},n->true);fail("alias source overwritten");}catch(IOException expected){assertTrue(expected.getMessage().contains("原视频相同"));}
+  assertEquals(before,engine.bytes(doc("fixture.mp4")));
+ }
  @Test public void cancellationStopsNativeProcess()throws Exception{
   NativeRunner.reset();try(android.os.ParcelFileDescriptor in=app.getContentResolver().openFileDescriptor(doc("fixture.mp4"),"r")){
    int[] code={0};Thread worker=new Thread(()->code[0]=NativeRunner.execute(app.getApplicationInfo().nativeLibraryDir+"/libffmpeg.so",new String[]{"-v","error","-re","-fd","3","-i","fd:","-map","0:v","-c","copy","-f","null","-"},in.getFd(),-1,new NativeRunner.Capture(null)));
