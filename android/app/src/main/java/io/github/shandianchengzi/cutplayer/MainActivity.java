@@ -29,7 +29,7 @@ public final class MainActivity extends Activity implements ExportService.Listen
  private void scroller(LinearLayout row){HorizontalScrollView scroll=new HorizontalScrollView(this);scroll.setFillViewport(false);scroll.addView(row);root.addView(scroll);}
  @Override public void onCreate(Bundle saved){
   super.onCreate(saved);getWindow().setStatusBarColor(0xff10151f);getWindow().setNavigationBarColor(0xff10151f);
-  ScrollView scroll=new ScrollView(this);scroll.setFillViewport(true);root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setPadding(dp(10),dp(8),dp(10),dp(12));root.setBackgroundColor(0xff10151f);scroll.addView(root);setContentView(scroll);
+  ScrollView scroll=new ScrollView(this);scroll.setFillViewport(true);root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setPadding(dp(10),dp(8),dp(10),dp(12));root.setBackgroundColor(0xff10151f);scroll.addView(root);setContentView(scroll);root.setOnApplyWindowInsetsListener((view,insets)->{int top,bottom;if(Build.VERSION.SDK_INT>=30){android.graphics.Insets bars=insets.getInsets(WindowInsets.Type.systemBars());top=bars.top;bottom=bars.bottom;}else{top=insets.getSystemWindowInsetTop();bottom=insets.getSystemWindowInsetBottom();}view.setPadding(dp(10),dp(8)+top,dp(10),dp(12)+bottom);return insets;});
   root.addView(label("Cut Player · Android "+BuildConfig.VERSION_NAME));
   LinearLayout actions=row();button("打开视频",actions,this::chooseVideos);button("输出目录",actions,this::chooseFolder);button("复制",actions,this::copy);button("初始化",actions,this::initialize);button("关于",actions,this::about);scroller(actions);
   folder=label("请选择手机本地输出文件夹");root.addView(folder);

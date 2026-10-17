@@ -206,6 +206,9 @@ jobs:
         with:
           gradle-version: '8.9'
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
       - name: Install Android toolchain
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'ndk;28.0.13004108' 'cmake;3.22.1'
       - uses: actions/cache@v4
@@ -213,6 +216,7 @@ jobs:
           path: |
             android/app/src/main/jniLibs
             android/dist/ffmpeg-6.1.1-source.tar.xz
+            android/dist/ffmpeg-*-config.*
           key: android-ffmpeg-6.1.1-ndk28-v1
       - uses: actions/cache@v4
         with:
@@ -241,7 +245,7 @@ jobs:
           target: google_apis
           profile: pixel_2
           disable-animations: true
-          script: gradle -p android --no-daemon connectedDebugAndroidTest
+          script: bash android/scripts/device-check.sh
       - name: Prepare Android release files
         run: |
           version=$(node -p "require('./package.json').version")
