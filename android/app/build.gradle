@@ -1,0 +1,27 @@
+plugins { id 'com.android.application' }
+def productVersion = new groovy.json.JsonSlurper().parse(file('../../package.json')).version
+android {
+ namespace 'io.github.shandianchengzi.cutplayer'
+ compileSdk 35
+ ndkVersion '28.0.13004108'
+ defaultConfig {
+  applicationId 'io.github.shandianchengzi.cutplayer'
+  minSdk 26
+  targetSdk 35
+  versionCode 10521
+  versionName productVersion
+  testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+  externalNativeBuild { cmake { arguments '-DANDROID_STL=none' } }
+ }
+ compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+ externalNativeBuild { cmake { path 'src/main/cpp/CMakeLists.txt'; version '3.22.1' } }
+ packaging { jniLibs { useLegacyPackaging true; keepDebugSymbols += ['**/libffmpeg.so','**/libffprobe.so'] } }
+ splits { abi { enable true; reset(); include 'arm64-v8a','x86_64'; universalApk false } }
+ buildFeatures { buildConfig true }
+ lint { abortOnError true }
+}
+dependencies {
+ testImplementation 'junit:junit:4.13.2'
+ androidTestImplementation 'androidx.test:runner:1.6.2'
+ androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+}

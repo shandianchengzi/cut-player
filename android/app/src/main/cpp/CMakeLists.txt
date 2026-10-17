@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.22.1)
+project(cutbridge C)
+add_library(cutbridge SHARED bridge.c)
+target_compile_options(cutbridge PRIVATE -Wall -Wextra -Werror -std=c11)
+target_link_options(cutbridge PRIVATE -Wl,-z,max-page-size=16384)
