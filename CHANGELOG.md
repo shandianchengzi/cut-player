@@ -1,10 +1,14 @@
+# v1.5.23
+
+- 帮助菜单新增“打开程序所在目录”，直接打开当前可执行程序所在文件夹。
+
 # v1.5.22
 
 - 精细切割自动名称改为年月日时分秒加三位毫秒（yyyyMMddHHmmssSSS），兼容旧 Unix 输入，保留手动名称。
 
 # 版本记录
 
-当前版本 **v1.5.22**。完整逐版说明见 [release-notes/](release-notes/)；当前用法以 [使用指南](docs/USER_GUIDE.md) 为准。
+当前版本 **v1.5.23**。完整逐版说明见 [release-notes/](release-notes/)；当前用法以 [使用指南](docs/USER_GUIDE.md) 为准。
 
 | 版本 | 主要变化 | 发布说明 |
 | --- | --- | --- |
