@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 gradle -p android --no-daemon connectedDebugAndroidTest
+# UTP uninstalls test packages after completion; reinstall the exact tested app for UI checks.
+adb install -r android/app/build/outputs/apk/debug/app-x86_64-debug.apk
 adb shell am force-stop io.github.shandianchengzi.cutplayer
 adb shell am start -W -n io.github.shandianchengzi.cutplayer/.MainActivity
 mkdir -p android/dist
