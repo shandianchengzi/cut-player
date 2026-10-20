@@ -8,7 +8,9 @@ if(typeof module!=='undefined')module.exports={defaults,chord,format,validate};
 // Calendar filenames retain their written local wall time; Unix values are absolute milliseconds/seconds.
 function sourceName(filename){
  const stem=filename.replace(/\.[^.]+$/,'');
- let m=/^DJI_(\d{14})(?:_.*)?$/i.exec(stem);
+ let m=/(?<!\d)(\d{17})(?!\d)/.exec(stem);
+ if(m)return calendarSource(stem.slice(0,m.index),m[1],stem.slice(m.index+m[0].length),true);
+ m=/^DJI_(\d{14})(?:_.*)?$/i.exec(stem);
  if(m)return calendarSource('DJI_',m[1],'',true);
  m=/(\d{8})_(\d{6})/.exec(stem);
  if(m)return calendarSource(stem.slice(0,m.index),m[1]+m[2],stem.slice(m.index+m[0].length),false);
@@ -18,13 +20,17 @@ function sourceName(filename){
 }
 function calendarSource(prefix,digits,suffix,dji){
  const parts=[digits.slice(0,4),digits.slice(4,6),digits.slice(6,8),digits.slice(8,10),digits.slice(10,12),digits.slice(12,14)].map(Number);
- const base=Date.UTC(parts[0],parts[1]-1,parts[2],parts[3],parts[4],parts[5]);
+ const base=Date.UTC(parts[0],parts[1]-1,parts[2],parts[3],parts[4],parts[5],Number(digits.slice(14)||0));
  const d=new Date(base);
  if(d.getUTCFullYear()!==parts[0]||d.getUTCMonth()+1!==parts[1]||d.getUTCDate()!==parts[2]||d.getUTCHours()!==parts[3]||d.getUTCMinutes()!==parts[4]||d.getUTCSeconds()!==parts[5])return {kind:'plain',stem:prefix+digits+suffix};
  return {kind:'calendar',base,prefix,suffix,dji};
 }
 function segmentName(source,seconds=0,fine=false){
- if(fine){const base=source.kind==='calendar'?source.base-8*3600000:source.base;if(Number.isFinite(base))return source.prefix+String(base+Math.round(seconds*1000))+source.suffix+'x';return source.stem+'_'+Math.round(seconds*1000)+'x';}
+ if(fine){
+  const base=source.kind==='unix'?source.base+8*3600000:source.base;
+  if(Number.isFinite(base)){const d=new Date(base+Math.round(seconds*1000));const digits=[d.getUTCFullYear(),d.getUTCMonth()+1,d.getUTCDate(),d.getUTCHours(),d.getUTCMinutes(),d.getUTCSeconds(),d.getUTCMilliseconds()].map((n,i)=>String(n).padStart(i===0?4:i===6?3:2,'0')).join('');return source.prefix+digits+source.suffix+'x';}
+  return source.stem+'_'+Math.round(seconds*1000)+'x';
+ }
  const offset=Math.floor(seconds)*1000;
  if(source.kind==='unix')return source.prefix+String(Math.floor((source.base+offset)/source.scale)).padStart(source.width,'0')+source.suffix+'x';
  if(source.kind==='calendar'){const d=new Date(source.base+offset);const a=[d.getUTCFullYear(),d.getUTCMonth()+1,d.getUTCDate(),d.getUTCHours(),d.getUTCMinutes(),d.getUTCSeconds()].map((n,i)=>String(n).padStart(i===0?4:2,'0'));return source.prefix+a.slice(0,3).join('')+(source.dji?'':'_')+a.slice(3).join('')+source.suffix+'x';}
