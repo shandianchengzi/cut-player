@@ -47,6 +47,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Playback smoke test failed' }
           node scripts/open-file-smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Open-file smoke test failed' }
+          node scripts/batch-smoke.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Batch queue smoke test failed' }
           node scripts/tabs-smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Tabs smoke test failed' }
       - name: Benchmark previous release
@@ -65,8 +67,8 @@ jobs:
         shell: pwsh
         run: |
           $version = node -p "require('./package.json').version"
-          Invoke-WebRequest 'https://github.com/shandianchengzi/cut-player/releases/download/v1.5.17/Cut-Player-1.5.17-x64-Setup.exe' -OutFile "$env:RUNNER_TEMP/diff-old.exe"
-          Invoke-WebRequest 'https://github.com/shandianchengzi/cut-player/releases/download/v1.5.17/Cut-Player-1.5.17-x64-Setup.exe.blockmap' -OutFile "$env:RUNNER_TEMP/diff-old.blockmap"
+          Invoke-WebRequest 'https://github.com/shandianchengzi/cut-player/releases/download/v1.5.24/Cut-Player-1.5.24-x64-Setup.exe' -OutFile "$env:RUNNER_TEMP/diff-old.exe"
+          Invoke-WebRequest 'https://github.com/shandianchengzi/cut-player/releases/download/v1.5.24/Cut-Player-1.5.24-x64-Setup.exe.blockmap' -OutFile "$env:RUNNER_TEMP/diff-old.blockmap"
           node scripts/differential-benchmark.cjs "$env:RUNNER_TEMP/diff-old.exe" "$env:RUNNER_TEMP/diff-old.blockmap" "dist/Cut-Player-$version-x64-Setup.exe" "dist/Cut-Player-$version-x64-Setup.exe.blockmap"
           if ($LASTEXITCODE -ne 0) { throw 'Real installer differential verification failed' }
       - name: Verify bundled executable and FFmpeg
@@ -76,6 +78,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Playback smoke test failed' }
           node scripts/open-file-smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Open-file smoke test failed' }
+          node scripts/batch-smoke.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Batch queue smoke test failed' }
           node scripts/tabs-smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Tabs smoke test failed' }
       - name: Verify actual NSIS installation
@@ -98,6 +102,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Playback smoke test failed' }
           node scripts/open-file-smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Open-file smoke test failed' }
+          node scripts/batch-smoke.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Batch queue smoke test failed' }
           node scripts/tabs-smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Tabs smoke test failed' }
           if ($LASTEXITCODE -ne 0) { throw 'Installed application smoke test failed' }

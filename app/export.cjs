@@ -1,6 +1,7 @@
-const {normalizeNotes}=require('./model.cjs');
+(function(root){
+const normalize=typeof module!=='undefined'?require('./model.cjs').normalizeNotes:normalizeNotes;
 function parsePlan(text,duration){
- text=normalizeNotes(text);
+ text=normalize(text);
  const m=/^breakpoints:([^\n]*)\r?\nnames:([^\n]*)\s*$/.exec(text);
  if(!m)throw Error('文本必须为 breakpoints 与 names 两行');
  const raw=m[1].trim()?m[1].trim().split(','):[];
@@ -14,4 +15,5 @@ function parsePlan(text,duration){
 }
 function videoArgs(input,part,output){return ['-hide_banner','-nostdin','-y','-i',input,'-ss',String(part.start),'-to',String(part.end),'-map','0:v?','-map','0:a?','-c','copy',output];}
 function audioArgs(input,output){return ['-hide_banner','-nostdin','-y','-i',input,'-map','0:a:0','-c','copy','-vn',output];}
-module.exports={parsePlan,videoArgs,audioArgs};
+if(typeof module!=='undefined')module.exports={parsePlan,videoArgs,audioArgs};else root.parsePlan=parsePlan;
+})(globalThis);

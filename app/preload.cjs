@@ -1,5 +1,11 @@
 const {contextBridge,ipcRenderer,webUtils}=require('electron');
 contextBridge.exposeInMainWorld('desktop',{
+ queueImport:files=>ipcRenderer.invoke('queue-import',files.map(file=>typeof file==='string'?file:webUtils.getPathForFile(file))),
+ queueAdd:request=>ipcRenderer.invoke('queue-add',request),
+ queueState:()=>ipcRenderer.invoke('queue-state'),
+ queueCancel:id=>ipcRenderer.invoke('queue-cancel',id),
+ queueClear:()=>ipcRenderer.invoke('queue-clear'),
+ onQueueUpdate:fn=>ipcRenderer.on('queue-update',(_e,jobs)=>fn(jobs)),
  describeInputs:files=>ipcRenderer.invoke('describe-inputs',files.map(file=>typeof file==='string'?file:webUtils.getPathForFile(file))),
  clearInput:()=>ipcRenderer.invoke('clear-input'),
  takeOpenFiles:()=>ipcRenderer.invoke('take-open-files'),
