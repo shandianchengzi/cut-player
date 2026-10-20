@@ -2,7 +2,8 @@ const {app,BrowserWindow,ipcMain,clipboard,dialog}=require('electron');
 const path=require('node:path'),fs=require('node:fs'),{spawn}=require('node:child_process');
 const {validate,upgradeConfig}=require('./model.cjs'),{parsePlan,videoArgs,audioArgs}=require('./export.cjs');
 if(process.env.CUT_PLAYER_TEST_PROFILE)app.setPath('userData',process.env.CUT_PLAYER_TEST_PROFILE);
-let analysisController,mainWindow;
+let analysisQueue,mainWindow;
+const {AnalysisQueue}=require('./analysis-queue.cjs');
 const {videoPaths}=require('./open-files.cjs');
 const mediaSource=require('./media-source.cjs').createMediaSource();
 const pendingFiles=videoPaths(process.argv.slice(process.defaultApp?2:1),process.cwd());
@@ -22,6 +23,7 @@ app.whenReady().then(()=>{if(!primary)return;
  const {analyzeMedia}=require('./analyze.cjs');
  const win=new BrowserWindow({width:1180,height:760,minWidth:850,minHeight:560,backgroundColor:'#10151f',webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
  mainWindow=win;
+ analysisQueue=new AnalysisQueue(()=>Math.min(2,autoConcurrency()));
  let input,inputUrl,busy=false;
  const {progressParser,localInputOptions}=require('./ffmpeg-progress.cjs');
  const {sourceInfoArgs,parseSourceInfo}=require('./export-info.cjs');
@@ -38,10 +40,24 @@ app.whenReady().then(()=>{if(!primary)return;
  handle('load-config',()=>({...state,path:configPath}));
  handle('save-config',patch=>{if(patch.config!==undefined){if(!validate(patch.config))throw Error('配置无效');state.config=patch.config;}if(patch.nameList!==undefined){if(!Array.isArray(patch.nameList)||patch.nameList.length>2000||patch.nameList.some(x=>typeof x!=='string'||x.length>200000||/[\r\n,]/.test(x)))throw Error('名称列表无效');state.nameList=patch.nameList;}if(typeof patch.fine==='boolean')state.fine=patch.fine;if(typeof patch.audio==='boolean')state.audio=patch.audio;save();return true;});
  handle('describe-inputs',files=>{if(!Array.isArray(files)||files.length>200)throw Error('一次最多打开 200 个视频');return files.map(file=>{try{if(typeof file!=='string'||!fs.statSync(file).isFile())throw Error();const resolved=path.resolve(file);return {path:resolved,name:path.basename(resolved)};}catch{return {error:'视频文件不存在或无法打开：'+String(file)};}});});
- handle('clear-input',()=>{analysisController?.abort();input=undefined;inputUrl=undefined;return true;});
- handle('set-input',async file=>{if(typeof file!=='string'||!fs.statSync(file).isFile())throw Error('视频路径无效');analysisController?.abort();inputUrl=await mediaSource.select(file);input=file;return {url:inputUrl,name:path.basename(file)};});
+ handle('clear-input',()=>{input=undefined;inputUrl=undefined;return true;});
+ handle('set-input',async file=>{if(typeof file!=='string'||!fs.statSync(file).isFile())throw Error('视频路径无效');inputUrl=await mediaSource.select(file);input=file;return {url:inputUrl,name:path.basename(file)};});
  handle('input-status',()=>{let exists=false;try{exists=!!input&&fs.statSync(input).isFile();}catch{}return {url:inputUrl,exists};});
- handle('analyze-media',async token=>{requireInput();analysisController?.abort();analysisController=new AbortController();const selected=input,controller=analysisController;const sent=new Set();const result=await analyzeMedia(ffmpeg,ffprobe,input,analysisController.signal,part=>{if(input===selected&&!controller.signal.aborted&&!win.isDestroyed()){for(const key of ['peaks','frames'])if(part[key])sent.add(key);win.webContents.send('media-update',{...part,token});}},path.join(app.getPath('userData'),'analysis-cache'),inputUrl);for(const key of sent)delete result[key];return result;});
+ handle('analyze-media',async request=>{
+  const selected=path.resolve(typeof request?.file==='string'?request.file:input||'');requireFile(selected);
+  const token=typeof request==='object'?request.token:request;
+  return analysisQueue.run(selected.toLowerCase(),async signal=>{
+   const analysisSource=require('./media-source.cjs').createMediaSource();
+   try{
+    const mediaUrl=await analysisSource.select(selected);
+    if(!signal.aborted&&!win.isDestroyed())win.webContents.send('media-update',{token,file:selected,state:'running'});
+    return await analyzeMedia(ffmpeg,ffprobe,selected,signal,part=>{
+     // Only copy partial arrays for the visible file. Every tab receives its own full final result.
+     if(input===selected&&!signal.aborted&&!win.isDestroyed())win.webContents.send('media-update',{...part,token,file:selected});
+    },path.join(app.getPath('userData'),'analysis-cache'),mediaUrl);
+   }finally{await analysisSource.close();}
+  });
+ });
  handle('cancel-export',()=>{if(busy){legacyController?.abort();return true;}return false;});
  async function executeExport(text,file,options={}){
   let activeChild,cancelRequested=false;
@@ -120,4 +136,4 @@ app.whenReady().then(()=>{if(!primary)return;
  win.on('close',e=>{if(busy||queue.busy){e.preventDefault();dialog.showMessageBox(win,{type:'info',message:'正在导出，请等待任务结束后关闭。'});}});
  win.loadFile(path.join(__dirname,'index.html'));
 });
-app.on('before-quit',()=>{analysisController?.abort();mediaSource.close();});app.on('window-all-closed',()=>app.quit());
+app.on('will-quit',()=>{analysisQueue?.close();mediaSource.close();});app.on('window-all-closed',()=>app.quit());
