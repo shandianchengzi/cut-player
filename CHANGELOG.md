@@ -4,10 +4,11 @@
 
 # 版本记录
 
-当前版本 **v1.5.21**。完整逐版说明见 [release-notes/](release-notes/)；当前用法以 [使用指南](docs/USER_GUIDE.md) 为准。
+当前版本 **v1.5.22**。完整逐版说明见 [release-notes/](release-notes/)；当前用法以 [使用指南](docs/USER_GUIDE.md) 为准。
 
 | 版本 | 主要变化 | 发布说明 |
 | --- | --- | --- |
+| 1.5.22 | 精细名称显示日历毫秒；Android 首个测试 APK、修正容器时长参考并校验无损导出 | [详情](release-notes/v1.5.22.md) |
 | 1.5.21 | 新增 Android 原生测试 APK、内置 FFmpeg 无重编码切割、SAF 文件读写及前台导出 | [详情](release-notes/v1.5.21.md) |
 | 1.5.20 | 导出与活动标签分离，导出期间可打开 / 切换 / 关闭视频并编辑下一个；固定导出源与记录快照 | [详情](release-notes/v1.5.20.md) |
 | 1.5.19 | 多视频标签页、多选 / 多文件导入、独立记录与播放状态、恢复会话与关闭记录；验证切换后导出源 | [详情](release-notes/v1.5.19.md) |
