@@ -194,7 +194,8 @@ jobs:
         run: bash .github/scripts/cloudflare-pages-backup.sh
 
   android:
-    runs-on: ubuntu-latest
+    # Keep the packet-reference FFmpeg aligned with bundled 6.1.1 (Ubuntu 26 ships 8.x).
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4

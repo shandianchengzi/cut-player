@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# The desktop comparison must use the same FFmpeg generation as the app.
+[[ "$(ffmpeg -version)" == "ffmpeg version 6.1.1"* ]] || { echo "Reference FFmpeg must be 6.1.1, matching the bundled engine" >&2; exit 1; }
+[[ "$(ffprobe -version)" == "ffprobe version 6.1.1"* ]] || { echo "Reference FFprobe must be 6.1.1" >&2; exit 1; }
 base="$(cd "$(dirname "$0")/.." && pwd)"
 assets="$base/app/src/androidTest/assets"
 mkdir -p "$assets"
