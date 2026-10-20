@@ -10,7 +10,7 @@ permissions:
   id-token: write
 concurrency:
   group: windows-release
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   build:
     runs-on: windows-latest
@@ -41,14 +41,15 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Export equivalence benchmark failed' }
           Get-Content dist/export-performance.json
       - name: Desktop playback and keyboard smoke test
+        timeout-minutes: 5
         run: |
           New-Item -ItemType Directory -Force dist
+          node scripts/batch-smoke.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Batch queue smoke test failed' }
           node scripts/smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Playback smoke test failed' }
           node scripts/open-file-smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Open-file smoke test failed' }
-          node scripts/batch-smoke.cjs
-          if ($LASTEXITCODE -ne 0) { throw 'Batch queue smoke test failed' }
           node scripts/tabs-smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Tabs smoke test failed' }
       - name: Benchmark previous release
@@ -74,12 +75,12 @@ jobs:
       - name: Verify bundled executable and FFmpeg
         run: |
           $env:CUT_PLAYER_PACKAGED_EXE = Join-Path $PWD 'dist/win-unpacked/Cut Player.exe'
+          node scripts/batch-smoke.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Batch queue smoke test failed' }
           node scripts/smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Playback smoke test failed' }
           node scripts/open-file-smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Open-file smoke test failed' }
-          node scripts/batch-smoke.cjs
-          if ($LASTEXITCODE -ne 0) { throw 'Batch queue smoke test failed' }
           node scripts/tabs-smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Tabs smoke test failed' }
       - name: Verify actual NSIS installation
@@ -98,12 +99,12 @@ jobs:
             if (!(Test-Path $installedNotice)) { throw "Installed licensing notice missing: $notice" }
             if ((Get-FileHash $installedNotice).Hash -ne (Get-FileHash $notice).Hash) { throw "Installed licensing notice differs: $notice" }
           }
+          node scripts/batch-smoke.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Batch queue smoke test failed' }
           node scripts/smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Playback smoke test failed' }
           node scripts/open-file-smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Open-file smoke test failed' }
-          node scripts/batch-smoke.cjs
-          if ($LASTEXITCODE -ne 0) { throw 'Batch queue smoke test failed' }
           node scripts/tabs-smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Tabs smoke test failed' }
           if ($LASTEXITCODE -ne 0) { throw 'Installed application smoke test failed' }
