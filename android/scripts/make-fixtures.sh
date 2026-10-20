@@ -9,8 +9,9 @@ ffmpeg -v error -y -i "$assets/fixture.mp4" -map 0:v -c copy "$assets/silent.mp4
 temp="$(mktemp -d)"
 trap 'rm -rf "$temp"' EXIT
 for type in mp4 mkv; do
+ source_end=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$assets/fixture.$type")
  for part in 0 1; do
-  if [[ "$part" == 0 ]]; then start=0; end=4.137; else start=4.137; end=12; fi
+  if [[ "$part" == 0 ]]; then start=0; end=4.137; else start=4.137; end="$source_end"; fi
   ffmpeg -v error -y -i "$assets/fixture.$type" -ss "$start" -to "$end" -map '0:v?' -map '0:a?' -c copy "$temp/part.$type"
   ffprobe -v error -show_packets -show_data_hash sha256 -show_entries 'packet=stream_index,pts,dts,duration,size,data_hash:stream=codec_type,codec_name' -of json "$temp/part.$type" > "$assets/expected-$type-$part.json"
   ffmpeg -v error -y -i "$temp/part.$type" -map 0:a:0 -c copy -vn "$temp/part.aac"
