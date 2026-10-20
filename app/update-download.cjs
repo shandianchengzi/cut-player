@@ -5,7 +5,7 @@ async function digest(file){const h=crypto.createHash('sha512');for await(const 
 async function resumableDownload(url,destination,options,{request,cacheDir,fallback,say,delay=wait}){
  if(!options.sha512)throw Error('更新文件缺少 SHA-512 校验，停止下载');
  fs.mkdirSync(cacheDir,{recursive:true});const partial=path.join(cacheDir,crypto.createHash('sha256').update(options.sha512).digest('hex')+'.part');
- const sources=[String(url),...(fallback?[fallback]:[])];let last;
+ const sources=[...new Set([String(url),...(fallback?[fallback]:[])])];let last;
  for(let attempt=0;attempt<6;attempt++){
   if(options.cancellationToken?.cancelled)throw Error('更新下载已取消');
   try{
@@ -21,7 +21,7 @@ async function resumableDownload(url,destination,options,{request,cacheDir,fallb
    try{await pipeline(response,fs.createWriteStream(partial,{flags:start?'a':'w'}));}finally{clearInterval(timer);}
    if(await digest(partial)!==options.sha512){fs.rmSync(partial,{force:true});throw Error('更新文件 SHA-512 校验失败');}
    fs.copyFileSync(partial,destination);fs.unlinkSync(partial);return destination;
-  }catch(e){last=e;if(options.cancellationToken?.cancelled)throw e;if(attempt<5){say(`更新连接中断，将重试 ${attempt+1}/5；已下载部分保留`);await delay(Math.min(16000,1000*2**attempt));}}
+  }catch(e){last=e;if(options.cancellationToken?.cancelled)throw e;if(attempt<5){say(`更新连接中断（${e.message}），切换至 ${new URL(sources[(attempt+1)%sources.length]).hostname} 重试 ${attempt+1}/5；已下载部分保留`);await delay(Math.min(16000,1000*2**attempt));}}
  }
  throw last;
 }

@@ -1,5 +1,6 @@
 const path=require('node:path');
 const {resumableDownload}=require('./update-download.cjs');
+const backupFeed=url=>({provider:'generic',url,useMultipleRangeRequest:false});
 function configureUpdateDownloads(updater,{cacheDir,fallbackBase,request,say,log,delay}){
  let differential=false;
  updater.disableDifferentialDownload=false;
@@ -12,8 +13,8 @@ function configureUpdateDownloads(updater,{cacheDir,fallbackBase,request,say,log
  };
  // Native differential requests bypass download(); this override handles only full-package fallback.
  updater.httpExecutor.download=(url,destination,options)=>resumableDownload(url,destination,options,{
-  cacheDir,fallback:fallbackBase+path.basename(new URL(String(url)).pathname),request,say,delay
+  cacheDir,fallback:String(url).startsWith(fallbackBase)?'https://github.com/shandianchengzi/cut-player/releases/download/v'+updater.updateInfoAndProvider.info.version+'/'+path.basename(new URL(String(url)).pathname):fallbackBase+path.basename(new URL(String(url)).pathname),request,say,delay
  });
  return ()=>differential?'差分更新':'完整更新';
 }
-module.exports={configureUpdateDownloads};
+module.exports={configureUpdateDownloads,backupFeed};

@@ -10,7 +10,7 @@ function installUpdates(win,isBusy,save){
  function ensureUpdater(){if(autoUpdater)return;
  autoUpdater=require('electron-updater').autoUpdater;autoUpdater.autoDownload=false;autoUpdater.autoInstallOnAppQuit=false;
  autoUpdater.httpExecutor.cachedSession=win.webContents.session;
- downloadLabel=require('./update-mode.cjs').configureUpdateDownloads(autoUpdater,{cacheDir:path.join(app.getPath('userData'),'update-downloads'),fallbackBase:backup,say,log,request:(url,headers)=>net.request({url,headers,session:win.webContents.session})});
+ downloadLabel=require('./update-mode.cjs').configureUpdateDownloads(autoUpdater,{cacheDir:path.join(app.getPath('userData'),'update-downloads'),fallbackBase:backup,say,log,request:(url,headers)=>{const req=net.request({url,session:win.webContents.session});for(const [name,value] of Object.entries(headers))req.setHeader(name,value);return req;}});
 
  autoUpdater.on('error',e=>log('updater error: '+e.message));
  autoUpdater.on('update-not-available',()=>{checking=false;say('当前已是最新版 '+app.getVersion());});
@@ -23,7 +23,7 @@ function installUpdates(win,isBusy,save){
  async function check(){if(checking||pending)return;
  if(process.env.PORTABLE_EXECUTABLE_FILE){say('便携版更新已停用，请手动下载 Setup.exe 安装版；配置和记录会保留。');await dialog.showMessageBox(win,{type:'info',message:'便携版更新已停用',detail:'请从 GitHub Releases 下载最新 Setup.exe 安装版。安装后从新建的开始菜单或桌面快捷方式启动，原便携 exe 不会变成新版本。配置与记录保留在本机。'});return;}
  if(!app.isPackaged){say('开发模式不安装更新');return;}
- checking=true;say('正在检查更新…');try{ensureUpdater();let result,last;for(let i=0;i<4;i++){try{autoUpdater.setFeedURL(i%2?{provider:'generic',url:backup}:{provider:'github',owner:'shandianchengzi',repo:'cut-player'});result=await autoUpdater.checkForUpdates();break;}catch(e){last=e;if(i<3){say('检查连接失败，切换下载源并重试 '+(i+1)+'/3');await new Promise(r=>setTimeout(r,1000*2**i));}}}if(!result)throw last;if(require('semver').gt(result.updateInfo.version,app.getVersion())){checking=true;await autoUpdater.downloadUpdate();}}catch(e){await failure(e);}finally{checking=false;}}
+ checking=true;say('正在检查更新…');try{ensureUpdater();let result,last;for(let i=0;i<4;i++){try{autoUpdater.setFeedURL(i%2?require('./update-mode.cjs').backupFeed(backup):{provider:'github',owner:'shandianchengzi',repo:'cut-player'});result=await autoUpdater.checkForUpdates();break;}catch(e){last=e;if(i<3){say('检查连接失败，切换下载源并重试 '+(i+1)+'/3');await new Promise(r=>setTimeout(r,1000*2**i));}}}if(!result)throw last;if(require('semver').gt(result.updateInfo.version,app.getVersion())){checking=true;await autoUpdater.downloadUpdate();}}catch(e){await failure(e);}finally{checking=false;}}
  async function showAbout(){
   const choice=await dialog.showMessageBox(win,{type:'info',title:'关于 Cut Player',message:'Cut Player '+app.getVersion(),detail:'作者：shandianchengzi\nCopyright (c) 2026 shandianchengzi\n\n应用许可：PolyForm Noncommercial 1.0.0\n许可范围内非商业用途免费；其他商业用途须另行付费并取得书面授权。商用许可不等于项目版权转让，收购另行协商。\n自 v1.5.12 起采用新许可；此前按 MIT 发布的版本保留原有权利。第三方组件继续遵循各自许可证。\n\n项目源码：https://github.com/shandianchengzi/cut-player\n许可与商业授权：https://github.com/shandianchengzi/cut-player/blob/main/COMMERCIAL-LICENSE.md\n随包许可文件位于安装目录 resources/licensing/。',buttons:['关闭','查看源码','许可与商业授权'],defaultId:0,cancelId:0,noLink:true});
   if(choice.response===1)await shell.openExternal('https://github.com/shandianchengzi/cut-player');

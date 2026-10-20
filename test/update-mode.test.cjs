@@ -1,6 +1,6 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http=require('node:http'),crypto=require('node:crypto'),{gzipSync}=require('node:zlib');
-const {NsisUpdater}=require('electron-updater/out/NsisUpdater'),{DownloadedUpdateHelper}=require('electron-updater/out/DownloadedUpdateHelper'),{GenericProvider}=require('electron-updater/out/providers/GenericProvider'),{HttpExecutor}=require('builder-util-runtime');
-const {configureUpdateDownloads}=require('../app/update-mode.cjs');
+const {NsisUpdater}=require('electron-updater/out/NsisUpdater'),{DownloadedUpdateHelper}=require('electron-updater/out/DownloadedUpdateHelper'),{createClient}=require('electron-updater/out/providerFactory'),{HttpExecutor}=require('builder-util-runtime');
+const {configureUpdateDownloads,backupFeed}=require('../app/update-mode.cjs');
 class Executor extends HttpExecutor{createRequest(options,callback){return http.request(options,callback);}}
 const sha=(data,algorithm='sha512')=>crypto.createHash(algorithm).update(data).digest('base64');
 const blockSize=65536;
@@ -13,6 +13,7 @@ for(const mode of ['differential','missing-cache','range-error','bad-patch','bad
    const route=new URL(req.url,'http://localhost').pathname;
    if(route.endsWith('.blockmap')){const map=blockmap(route.includes('1.0.0')?old:fresh);res.writeHead(200,{'content-length':map.length});res.end(map);return;}
    const match=/^bytes=(\d+)-(\d*)$/.exec(req.headers.range||'');
+   if(req.headers.range?.includes(',')){res.writeHead(200,{'content-type':'application/octet-stream'}).end(fresh);return;}
    if(match){rangeRequests++;if(mode==='range-error'){res.writeHead(500).end();return;}const start=Number(match[1]),end=match[2]?Number(match[2]):fresh.length-1;const data=Buffer.from(fresh.subarray(start,end+1));if(mode==='bad-patch'||mode==='bad-full')data[0]^=255;networkBytes+=data.length;res.writeHead(206,{'content-length':data.length,'content-range':`bytes ${start}-${end}/${fresh.length}`});res.end(data);
    }else{fullRequests++;const data=Buffer.from(fresh);if(mode==='bad-full')data[0]^=255;networkBytes+=data.length;res.writeHead(200,{'content-length':data.length});res.end(data);}
   });await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const url='http://127.0.0.1:'+server.address().port+'/';
@@ -23,7 +24,7 @@ for(const mode of ['differential','missing-cache','range-error','bad-patch','bad
    if(mode!=='missing-cache')fs.writeFileSync(path.join(updater.downloadedUpdateHelper.cacheDir,'installer.exe'),old);
    configureUpdateDownloads(updater,{cacheDir:path.join(root,'partial'),fallbackBase:url,request:(url,headers)=>http.request(url,{headers}),say:m=>messages.push(m),log:()=>{},delay:async()=>{}});
    assert.equal(updater.disableDifferentialDownload,false);
-   const info={version:'1.0.1',files:[{url:'setup-1.0.1.exe',size:fresh.length,sha512:sha(fresh)}]},provider=new GenericProvider({provider:'generic',url},updater,{executor:updater.httpExecutor,platform:'win32',isUseMultipleRangeRequest:false});
+   const info={version:'1.0.1',files:[{url:'setup-1.0.1.exe',size:fresh.length,sha512:sha(fresh)}]},provider=createClient(backupFeed(url),updater,{executor:updater.httpExecutor,platform:'win32',isUseMultipleRangeRequest:true});
    updater.updateInfoAndProvider={info,provider};updater.on('update-downloaded',()=>downloaded++);updater.on('download-progress',()=>{});
    if(mode==='bad-full'){await assert.rejects(updater.downloadUpdate());assert.equal(downloaded,0);}
    else{const [output]=await updater.downloadUpdate();assert.deepEqual(fs.readFileSync(output),fresh);assert.equal(downloaded,1);
