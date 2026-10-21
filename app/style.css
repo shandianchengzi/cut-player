@@ -39,3 +39,7 @@ aside{gap:14px;min-height:0}.notes-panel,.names-panel{padding:14px;border:1px so
 #batchLines{width:54px;flex-shrink:0;text-align:right;color:#a5b6cd;background:#182130;overflow:hidden;user-select:none}
 #batchText{flex:1;min-width:0;height:100%;resize:none;overflow:auto}
 #batchErrors{color:#ffb6a6;white-space:pre-wrap;max-height:160px;overflow:auto}#batchErrors p{margin:4px 0}#batchErrors button{color:inherit;text-align:left}
+
+#mergeDialog{width:min(900px,94vw);max-height:90vh}#mergeList{max-height:44vh;overflow:auto;padding-left:30px}#mergeList li{padding:8px 4px;border-bottom:1px solid #2a374c;display:flex;align-items:center;gap:10px}#mergeList label{flex:1;display:flex;align-items:flex-start;gap:8px;margin:0;min-width:0}#mergeList .merge-label{overflow-wrap:anywhere}#mergeList small{display:block;color:#99a9c0;margin-top:3px}#mergeList .merge-order{display:flex;gap:4px}#mergeList button{padding:5px 9px}#mergeName{display:block;width:100%;margin:8px 0}#mergeErrors{white-space:pre-wrap;color:#ffb6a6}#mergeProgress{white-space:pre-wrap;color:#ffcf91}.merge-hint{font-size:12px;color:#99a9c0}
+
+.note-actions{flex-wrap:wrap;justify-content:flex-end}

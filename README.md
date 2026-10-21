@@ -1,6 +1,6 @@
 # Cut Player
 
-Windows 本地视频时间记录与无损分段工具。当前发布版本：**v1.5.27**。
+Windows 本地视频时间记录与无损分段工具。当前发布版本：**v1.5.28**。
 
 [介绍与使用方法](https://shandianchengzi.github.io/cut-player/) · [开发故事与发布博客](docs/CUT_PLAYER_BLOG.md) · [CSDN 正式文章](https://shandianchengzi.blog.csdn.net/article/details/167817483) · [下载最新版](https://github.com/shandianchengzi/cut-player/releases/latest) · [备用下载](https://shandianchengzi.github.io/cut-player/updates/) · [版本记录](CHANGELOG.md)
 
@@ -111,3 +111,9 @@ FFmpeg 及相关第三方信息见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.
 提供 Android 8.0+ arm64 手机测试 APK，内置 FFmpeg 无重编码切割。下载同一 [Release](https://github.com/shandianchengzi/cut-player/releases/latest) 中的 `android-arm64-v8a-test.apk`，或访问[备用下载页](https://shandianchengzi.github.io/cut-player/updates/)。多视频、本地文件授权、输出子目录、两行时间表及音频导出见 [Android 说明](android/README.md)。测试签名首版，不含桌面波形 / 逐帧界面和差分更新。
 
 Android FFmpeg 按 LGPL 2.1+ 发布，对应原始源码、构建脚本及配置与 APK 同处 Release；应用许可不限制第三方组件权利。
+
+## 跨标签无损合并（Windows）
+
+点击「切割」旁的「合并片段」，面板列出所有已打开视频按当前断点划分的片段。勾选片段，用 ↑ / ↓ 调整顺序，输入输出名称后选择保存位置。默认名称为「【合并】第一个已选片段的名称」，手动改名后保留输入。合并使用 concat 的 inpoint / outpoint 和 -c copy 直接读取源视频，只生成最终文件；同源连续相邻片段自动合成一个读取区间，减少接缝。
+
+合并前检查轨道、编码、时间基及解码参数；不兼容时停止，不自动转码。原视频禁止覆盖，已有输出需确认。切点受关键帧限制，可能出现切点附近的额外帧和接缝时间偏差；完成后显示实际时长与所选时长差值。关闭面板、打开其他视频不改变已开始任务的片段快照；可停止合并，部分输出保留，临时文本清单自动清理。

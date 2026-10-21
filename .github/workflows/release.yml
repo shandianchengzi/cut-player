@@ -39,6 +39,8 @@ jobs:
         run: |
           node scripts/export-benchmark.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Export equivalence benchmark failed' }
+          node scripts/merge-engine-check.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Export equivalence benchmark failed' }
           Get-Content dist/export-performance.json
       - name: Desktop playback and keyboard smoke test
         timeout-minutes: 5
@@ -52,6 +54,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Open-file smoke test failed' }
           node scripts/tabs-smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Tabs smoke test failed' }
+          node scripts/merge-smoke.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Merge smoke test failed' }
       - name: Benchmark previous release
         shell: pwsh
         run: |
@@ -83,6 +87,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Open-file smoke test failed' }
           node scripts/tabs-smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Tabs smoke test failed' }
+          node scripts/merge-smoke.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Merge smoke test failed' }
       - name: Verify actual NSIS installation
         shell: pwsh
         run: |
@@ -107,6 +113,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Open-file smoke test failed' }
           node scripts/tabs-smoke.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Tabs smoke test failed' }
+          node scripts/merge-smoke.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Merge smoke test failed' }
           if ($LASTEXITCODE -ne 0) { throw 'Installed application smoke test failed' }
       - name: Benchmark optimized build
         shell: pwsh
@@ -123,6 +131,7 @@ jobs:
             dist/*.yml
             dist/*.blockmap
             dist/app-check.png
+            dist/merge-check.png
             dist/performance-*.json
             dist/export-performance.json
             dist/update-performance.json

@@ -1,5 +1,8 @@
 const {contextBridge,ipcRenderer,webUtils}=require('electron');
 contextBridge.exposeInMainWorld('desktop',{
+ mergeList:inputs=>ipcRenderer.invoke('merge-list',inputs),
+ mergeSegments:request=>ipcRenderer.invoke('merge-segments',request),
+ onMergeProgress:fn=>ipcRenderer.on('merge-progress',(_e,text)=>fn(text)),
  queueImport:files=>ipcRenderer.invoke('queue-import',files.map(file=>typeof file==='string'?file:webUtils.getPathForFile(file))),
  queueAdd:request=>ipcRenderer.invoke('queue-add',request),
  queueState:()=>ipcRenderer.invoke('queue-state'),

@@ -111,6 +111,26 @@ app.whenReady().then(()=>{if(!primary)return;
  let legacyController;
  handle('export-segments',async(text,file)=>{if(busy)throw Error('正在导出');busy=true;legacyController=new AbortController();try{return await executeExport(text,file,{signal:legacyController.signal});}finally{busy=false;legacyController=undefined;queue.pump();}});
 
+ const merger=require('./merge.cjs').createMergeEngine({ffmpeg,ffprobe,tempDir:app.getPath('temp')});
+ handle('merge-list',inputs=>merger.list(inputs));
+ handle('merge-segments',async request=>{
+  if(busy)throw Error('正在导出，请等待当前任务结束');busy=true;legacyController=new AbortController();
+  const progress=text=>{if(!win.isDestroyed())win.webContents.send('merge-progress',text);logExport('合并 · '+text);};
+  try{return await merger.merge(request,{signal:legacyController.signal,progress,
+   selectOutput:async({name,ext})=>{
+    if(process.env.CUT_PLAYER_TEST_OUTPUT)return path.join(process.env.CUT_PLAYER_TEST_OUTPUT,name+ext);
+    const result=await dialog.showSaveDialog(win,{title:'保存无损合并视频',defaultPath:path.join(path.dirname(request.parts[0].file),name+ext),filters:[{name:'原视频容器',extensions:[ext.slice(1)]},{name:'Matroska',extensions:['mkv']}]});
+    return result.canceled?null:result.filePath;
+   },
+   claimOutput:output=>{
+    if(input&&require('./merge.cjs').protectsSource(output,[input]))throw Error('输出文件不能覆盖当前源视频');
+    const key=path.resolve(output).toLowerCase();if(liveTargets.has(key)||queue.jobs.some(j=>['waiting','running'].includes(j.status)&&j.targets.includes(key)))throw Error('输出名称与正在导出的任务冲突');
+    liveTargets.add(key);return ()=>liveTargets.delete(key);
+   },
+   confirmOverwrite:async output=>(await dialog.showMessageBox(win,{type:'question',buttons:['取消','覆盖'],defaultId:0,cancelId:0,message:'输出文件已存在，是否覆盖？',detail:output})).response===1
+  });}catch(e){logExport('合并终止：'+e.message);throw e;}finally{busy=false;legacyController=undefined;queue.pump();}
+ });
+
  const {TaskQueue,autoConcurrency}=require('./task-queue.cjs');
  const {parseBatch}=require('./batch-plan.cjs');
  let previousCpu;
