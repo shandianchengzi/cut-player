@@ -1,6 +1,6 @@
 # Cut Player
 
-Windows 本地视频时间记录与无损分段工具。当前发布版本：**v1.5.28**。
+Windows 本地视频时间记录与无损分段工具。当前发布版本：**v1.5.29**。
 
 [介绍与使用方法](https://shandianchengzi.github.io/cut-player/) · [开发故事与发布博客](docs/CUT_PLAYER_BLOG.md) · [CSDN 正式文章](https://shandianchengzi.blog.csdn.net/article/details/167817483) · [下载最新版](https://github.com/shandianchengzi/cut-player/releases/latest) · [备用下载](https://shandianchengzi.github.io/cut-player/updates/) · [版本记录](CHANGELOG.md)
 
@@ -14,7 +14,7 @@ Windows 本地视频时间记录与无损分段工具。当前发布版本：**v
 
 - 打开或拖入本地视频，也支持 Windows「打开方式」传入视频；程序已运行时在原窗口接收新文件。
 - 自定义进度、音量和全屏控制；长按左右键连续快退 / 快进。点击音量波形定位时保持原来的播放 / 暂停状态。
-- 记录当前时间，生成可编辑的 `breakpoints` / `names` 两行文本，按文件名中的拍摄时间生成片段名称。
+- 记录当前时间，生成可编辑的 `breakpoints` / `names` 两行文本，按文件名中的拍摄时间生成片段名称；Unix 时间戳统一转为 UTC+8 的年月日时分秒毫秒，普通模式也不再输出 13 位时间戳。
 - 精细模式支持逐帧定位、毫秒断点与名称；滚轮缩放波形。**导出仍为原码流复制，切点受关键帧限制，不能保证逐帧精确。**
 - 滚动选择并删除片段记录，或确认后初始化记录以恢复两行结构。
 - 内置按此前整理的周深北京鸟巢演唱会顺序排列的可选名称；支持导入自定义列表、恢复默认和在光标处插入名称。

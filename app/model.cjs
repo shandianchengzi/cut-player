@@ -32,7 +32,7 @@ function segmentName(source,seconds=0,fine=false){
   return source.stem+'_'+Math.round(seconds*1000)+'x';
  }
  const offset=Math.floor(seconds)*1000;
- if(source.kind==='unix')return source.prefix+String(Math.floor((source.base+offset)/source.scale)).padStart(source.width,'0')+source.suffix+'x';
+ if(source.kind==='unix')return segmentName(source,Math.floor(seconds),true);
  if(source.kind==='calendar'){const d=new Date(source.base+offset);const a=[d.getUTCFullYear(),d.getUTCMonth()+1,d.getUTCDate(),d.getUTCHours(),d.getUTCMinutes(),d.getUTCSeconds()].map((n,i)=>String(n).padStart(i===0?4:2,'0'));return source.prefix+a.slice(0,3).join('')+(source.dji?'':'_')+a.slice(3).join('')+source.suffix+'x';}
  return source.stem+(seconds?'_'+breakpointTime(seconds).replaceAll(':',''):'')+'x';
 }
@@ -57,7 +57,7 @@ function replaceName(text,index,name){text=normalizeNotes(text);const m=/^breakp
 if(typeof module!=='undefined')Object.assign(module.exports,{upgradeConfig,importNames,replaceName});
 
 function frameAt(frames,time,direction=0){if(!frames.length)return time;let low=0,high=frames.length;while(low<high){const mid=(low+high)>>1;if(frames[mid]<time-0.00001)low=mid+1;else high=mid;}if(direction<0)return frames[Math.max(0,low-1)];if(direction>0)return frames[Math.min(frames.length-1,low+(Math.abs((frames[low]??Infinity)-time)<.00001?1:0))];return frames[Math.max(0,Math.min(frames.length-1,low))];}
-function precisionNotes(text,source){text=normalizeNotes(text);const m=/^breakpoints:([^\n]*)\r?\nnames:([^\n]*)\s*$/.exec(text);if(!m)return text;const raw=m[1].trim()?m[1].split(','):[];const times=raw.map(t=>{const a=/^(\d+):([0-5]\d)(?:\.(\d{3}))?$/.exec(t.trim());return a?Number(a[1])*60+Number(a[2])+Number(a[3]||0)/1000:NaN;});const names=m[2].split(',');if(names.length!==times.length+1||times.some(t=>!Number.isFinite(t)))return text;[0,...times].forEach((t,i)=>{if(names[i].trim()===segmentName(source,t))names[i]=segmentName(source,t,true);});return 'breakpoints:'+times.map(t=>breakpointTime(t,true)).join(',')+'\nnames:'+names.join(',');}
+function precisionNotes(text,source){text=normalizeNotes(text);const m=/^breakpoints:([^\n]*)\r?\nnames:([^\n]*)\s*$/.exec(text);if(!m)return text;const raw=m[1].trim()?m[1].split(','):[];const times=raw.map(t=>{const a=/^(\d+):([0-5]\d)(?:\.(\d{3}))?$/.exec(t.trim());return a?Number(a[1])*60+Number(a[2])+Number(a[3]||0)/1000:NaN;});const names=m[2].split(',');if(names.length!==times.length+1||times.some(t=>!Number.isFinite(t)))return text;[0,...times].forEach((t,i)=>{if(names[i].trim()===segmentName(source,t)||(source.kind==='unix'&&names[i].trim()===source.prefix+String(Math.floor((source.base+Math.floor(t)*1000)/source.scale)).padStart(source.width,'0')+source.suffix+'x'))names[i]=segmentName(source,t,true);});return 'breakpoints:'+times.map(t=>breakpointTime(t,true)).join(',')+'\nnames:'+names.join(',');}
 if(typeof module!=='undefined')Object.assign(module.exports,{frameAt,precisionNotes});
 
 if(typeof module!=='undefined')Object.assign(module.exports,{normalizeNotes});
