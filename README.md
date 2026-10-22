@@ -1,6 +1,6 @@
 # Cut Player
 
-Windows 本地视频时间记录与无损分段工具。当前发布版本：**v1.5.31**。
+Windows 本地视频时间记录与无损分段工具。当前发布版本：**v1.5.32**。
 
 [介绍与使用方法](https://shandianchengzi.github.io/cut-player/) · [开发故事与发布博客](docs/CUT_PLAYER_BLOG.md) · [CSDN 正式文章](https://shandianchengzi.blog.csdn.net/article/details/167817483) · [下载最新版](https://github.com/shandianchengzi/cut-player/releases/latest) · [备用下载](https://shandianchengzi.github.io/cut-player/updates/) · [版本记录](CHANGELOG.md)
 
@@ -121,3 +121,5 @@ Android FFmpeg 按 LGPL 2.1+ 发布，对应原始源码、构建脚本及配置
 合并片段默认保留全部所选内容：开始向前、结束向后扩展到可独立解码的关键帧，音频跟随同一范围；连续相邻片段整体读取，界面显示原选定、扩展后及实际时长。
 
 批量切割面板新增「仅导出原始音频（原名）」：忽略切点和 names，完整无损提取每个视频的第一条音轨，保留原文件名（更换为 .aac / .mka 扩展名），不生成视频，保留批量草稿。
+
+批量面板支持「清空导入列表」，一键清掉未提交的视频列表与时间表草稿；「清除未开始及已结束任务」同时移除等待任务和历史记录，正在执行的任务可单独停止。清除列表不删除任何媒体文件。

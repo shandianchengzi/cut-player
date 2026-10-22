@@ -10,13 +10,13 @@
 <dialog id="batchDialog" aria-labelledby="batchTitle">
 <div class="toolbar"><h2 id="batchTitle">批量切割队列</h2><button id="batchClose">关闭面板</button></div>
 <p>按视频列表顺序，每两行对应一个视频：breakpoints 一行、names 一行。可以一次粘贴全部内容。</p>
-<div class="toolbar"><button id="batchImport">导入多个视频</button><input id="batchFiles" type="file" multiple accept="video/*,.mkv,.mov,.m4v,.avi,.mts,.m2ts" hidden><label><input id="batchAudio" type="checkbox" checked>同时导出无损音频</label></div>
+<div class="toolbar"><button id="batchImport">导入多个视频</button><button id="batchReset">清空导入列表</button><input id="batchFiles" type="file" multiple accept="video/*,.mkv,.mov,.m4v,.avi,.mts,.m2ts" hidden><label><input id="batchAudio" type="checkbox" checked>同时导出无损音频</label></div>
 <ol id="batchList" aria-label="待切割视频列表"></ol>
 <label for="batchText">批量 breakpoints / names</label>
 <div class="batch-editor"><pre id="batchLines" aria-hidden="true">1</pre><textarea id="batchText" wrap="off" spellcheck="false" placeholder="breakpoints:00:10.000&#10;names:片段1,片段2"></textarea></div>
 <div id="batchErrors" role="alert"></div>
 <div class="toolbar"><button id="batchStart">全部加入队列并开始</button><button id="batchOriginalAudio">仅导出原始音频（原名）</button><span>并发自动调整，无需设置；关闭面板后继续切割。</span></div>
-<p>仅导出原始音频：每个视频完整提取第一条音轨，保留原文件名（仅更换扩展名），不使用切点或 names，不生成视频，不重新编码。AAC 保存为 .aac，其他音轨保存为 .mka；同名文件不覆盖。</p><h3>任务队列</h3><div class="toolbar"><span id="batchSummary" role="status"></span><button id="batchClear">清除已结束任务</button></div><ol id="batchJobs" aria-label="切割任务队列"></ol>
+<p>仅导出原始音频：每个视频完整提取第一条音轨，保留原文件名（仅更换扩展名），不使用切点或 names，不生成视频，不重新编码。AAC 保存为 .aac，其他音轨保存为 .mka；同名文件不覆盖。</p><h3>任务队列</h3><div class="toolbar"><span id="batchSummary" role="status"></span><button id="batchClear">清除未开始及已结束任务</button></div><small>正在执行的任务请单独停止；清除列表不删除源文件或已导出的文件。</small><ol id="batchJobs" aria-label="切割任务队列"></ol>
 </dialog>
 <dialog id="mergeDialog" aria-labelledby="mergeTitle">
 <form id="mergeForm">

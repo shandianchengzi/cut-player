@@ -24,3 +24,11 @@ test('audio-only jobs retain queue cancellation and report audio-specific comple
  finish({audioOnly:true,count:0,audioCount:1});await new Promise(r=>setImmediate(r));
  assert.equal(q.snapshot()[0].status,'done');assert.equal(q.snapshot()[0].progress,'原始音频导出完成');
 });
+
+test('clear removes waiting and completed jobs without starting them or interrupting active exports',async()=>{
+ let finish;const started=[],q=new TaskQueue(job=>{started.push(job.id);return new Promise(resolve=>{finish=resolve;});},()=>{},()=>1);
+ q.add([{name:'active'},{name:'waiting-a'},{name:'waiting-b'}]);await new Promise(r=>setImmediate(r));
+ const waiting=q.jobs.slice(1);q.clear();assert.deepEqual(q.snapshot().map(j=>j.status),['running']);assert.ok(waiting.every(j=>j.controller.signal.aborted));assert.equal(q.jobs[0].controller.signal.aborted,false);
+ finish({count:1});await new Promise(r=>setImmediate(r));assert.deepEqual(started,[1]);assert.equal(q.snapshot()[0].status,'done');q.clear();assert.deepEqual(q.snapshot(),[]);assert.equal(q.timer,null);
+ const held=new TaskQueue(()=>{throw Error('must not start');},()=>{},()=>0);held.add([{name:'not started'}]);const pending=held.jobs[0];held.clear();assert.equal(pending.controller.signal.aborted,true);assert.equal(held.busy,false);assert.equal(held.timer,null);assert.deepEqual(held.snapshot(),[]);
+});

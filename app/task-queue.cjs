@@ -8,12 +8,12 @@ class TaskQueue{
  snapshot(){return this.jobs.map(({id,name,status,progress,error,result})=>({id,name,status,progress,error,result}));}
  get busy(){return this.jobs.some(j=>j.status==='waiting'||j.status==='running');}
  emit(){this.notify(this.snapshot());}
- add(items){if(this.jobs.length+items.length>200)throw Error('队列最多保留 200 个任务，请先清除已结束任务');const added=items.map(item=>({...item,id:++this.serial,status:'waiting',progress:'等待执行',controller:new AbortController()}));this.jobs.push(...added);this.emit();this.pump();return added.map(j=>j.id);}
+ add(items){if(this.jobs.length+items.length>200)throw Error('队列最多保留 200 个任务，请先清除未开始或已结束任务');const added=items.map(item=>({...item,id:++this.serial,status:'waiting',progress:'等待执行',controller:new AbortController()}));this.jobs.push(...added);this.emit();this.pump();return added.map(j=>j.id);}
  pump(){clearTimeout(this.timer);this.timer=null;const active=this.jobs.filter(j=>j.status==='running').length;let slots=Math.max(0,this.capacity()-active);
   for(const job of this.jobs){if(!slots||job.status!=='waiting')continue;slots--;job.status='running';job.progress=job.audioOnly?'开始导出原始音频':'开始切割';this.emit();Promise.resolve().then(()=>this.execute(job,text=>{job.progress=text;this.emit();})).then(result=>{job.result=result;job.status=job.controller.signal.aborted?'canceled':'done';job.progress=job.status==='done'?(job.audioOnly?'原始音频导出完成':'切割完成'):'已取消';},e=>{job.status=job.controller.signal.aborted?'canceled':'failed';job.error=e.message;job.progress=job.status==='failed'?(job.audioOnly?'原始音频导出失败':'切割失败'):'已取消';}).finally(()=>{this.emit();this.pump();});}
   if(this.jobs.some(j=>j.status==='waiting')){this.timer=setTimeout(()=>this.pump(),1500);this.timer.unref?.();}
  }
  cancel(id){const job=this.jobs.find(j=>j.id===id);if(!job||!['waiting','running'].includes(job.status))return false;job.controller.abort();if(job.status==='waiting'){job.status='canceled';job.progress='已取消';}this.emit();this.pump();return true;}
- clear(){this.jobs=this.jobs.filter(j=>['waiting','running'].includes(j.status));this.emit();}
+ clear(){for(const job of this.jobs)if(job.status==='waiting')job.controller.abort();this.jobs=this.jobs.filter(j=>j.status==='running');this.emit();this.pump();}
 }
 module.exports={TaskQueue,autoConcurrency};
