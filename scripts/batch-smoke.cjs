@@ -25,8 +25,8 @@ const watchdog=setTimeout(()=>{console.error('Batch smoke exceeded 120 seconds')
   const invalidDraft='不是有效时间表';await p.locator('#batchText').fill(invalidDraft);await p.locator('#batchAudio').uncheck();
   assert.equal(await p.locator('#batchStart').isDisabled(),true);assert.equal(await p.locator('#batchOriginalAudio').isDisabled(),false);
   await p.locator('#batchOriginalAudio').click();
-  await p.waitForFunction(async()=>{const jobs=await window.desktop.queueState();return jobs.length===7&&jobs.every(j=>!['waiting','running'].includes(j.status));},{},{timeout:60000});
-  const audioJobs=(await p.evaluate(()=>window.desktop.queueState())).slice(3);
+  const audioDeadline=Date.now()+60000;let completedAudioJobs=[];while(Date.now()<audioDeadline){completedAudioJobs=await p.evaluate(()=>window.desktop.queueState());if(completedAudioJobs.length===7&&completedAudioJobs.every(j=>!['waiting','running'].includes(j.status)))break;await new Promise(r=>setTimeout(r,100));}
+  const audioJobs=completedAudioJobs.slice(3);
   assert.deepEqual(audioJobs.map(j=>j.status),['done','done','done','failed']);assert.match(audioJobs[3].error,/没有音频轨道/);
   assert.ok(audioJobs.slice(0,3).every(j=>j.result.audioOnly&&j.result.count===0&&j.result.audioCount===1));
   assert.equal(await p.locator('#batchText').inputValue(),invalidDraft);assert.equal(await p.locator('#batchList li').count(),4);
