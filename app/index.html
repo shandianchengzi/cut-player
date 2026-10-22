@@ -22,7 +22,7 @@
 <form id="mergeForm">
 <div class="toolbar"><h2 id="mergeTitle">跨标签页合并片段</h2><button id="mergeClose" type="button">关闭面板</button></div>
 <p>勾选需要的片段，使用 ↑ / ↓ 调整输出顺序。直接从源视频读取并流复制，只生成最终文件，不导出中间片段。</p>
-<p class="merge-hint">源视频的轨道及编码参数须兼容；不兼容时会停止，不自动转码。切点受关键帧限制，可能带入切点附近的帧或出现接缝时间偏差。</p>
+<p class="merge-hint">源视频的轨道及编码参数须兼容；不兼容时会停止，不自动转码。无损合并默认保留全部选中内容：开始向前、结束向后扩展到可独立解码的关键帧，音频跟随同一范围；没有后续关键帧时保留到片尾。对于需要额外参考帧的视频，可能扩展到片头或片尾。连续相邻片段整体读取。边界受音视频帧粒度影响。</p>
 <div class="toolbar"><button id="mergeAll" type="button">全选</button><button id="mergeNone" type="button">全不选</button><span id="mergeSummary" role="status"></span></div>
 <ol id="mergeList" aria-label="合并片段及顺序"></ol>
 <label for="mergeName">输出名称（不含扩展名）</label><input id="mergeName" maxlength="240" required>

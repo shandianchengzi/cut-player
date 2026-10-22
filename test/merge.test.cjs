@@ -1,5 +1,5 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),os=require('node:os');
-const {concatScript,compatible,validName,protectsSource}=require('../app/merge.cjs');
+const {concatScript,compatible,validName,protectsSource,closedKeyPacket}=require('../app/merge.cjs');
 const meta=()=>({streams:[{codec_type:'video',codec_name:'h264',width:64,height:64,time_base:'1/10240',extradata_hash:'SHA256:a'},{codec_type:'audio',codec_name:'aac',sample_rate:'48000',channels:2,time_base:'1/48000'}]});
 test('concat script repeats sources with in/out bounds, escapes quotes and contains no clip outputs',()=>{
  const text=concatScript([{url:"C:/a'b.mp4",start:2,end:5},{url:'http://127.0.0.1:1/x.mp4',start:0,end:3},{url:"C:/a'b.mp4",start:8,end:9}]);
@@ -17,4 +17,23 @@ test('output names and source aliases are protected',()=>{
 test('consecutive adjacent segments of one source share one read range without changing order',()=>{
  const text=concatScript([{url:'a.mp4',start:0,end:2},{url:'a.mp4',start:2,end:4},{url:'b.mp4',start:0,end:1},{url:'a.mp4',start:4,end:6}]);
  assert.equal((text.match(/^file /gm)||[]).length,3);assert.ok(text.includes("file 'a.mp4'\ninpoint 0\noutpoint 4\n"));assert.ok(text.endsWith("file 'a.mp4'\ninpoint 4\noutpoint 6\n"));
+});
+test('aligned B-frame ranges use decode outpoints and explicit presentation durations',()=>{
+ const text=concatScript([{url:'a.mp4',start:0,end:3,outpoint:2.933333},{url:'b.mp4',start:6,end:9,outpoint:8.933333}]);
+ assert.ok(text.includes('inpoint 0\noutpoint 2.933333\nduration 3\n'));
+ assert.ok(text.includes('inpoint 6\noutpoint 8.933333\nduration 3\n'));
+ const joined=concatScript([{url:'a.mp4',start:0,end:3,outpoint:2.933333},{url:'a.mp4',start:3,end:6,outpoint:5.933333}]);
+ assert.equal((joined.match(/^file /gm)||[]).length,1);assert.ok(joined.includes('outpoint 5.933333\nduration 6\n'));
+});
+
+test('random access verification distinguishes closed IDR from open GOP and parses packet hex only',()=>{
+ const dump=bytes=>({data:'\n00000000: '+Buffer.from(bytes).toString('hex').match(/.{1,4}/g).join(' ').padEnd(39,' ')+'  0000 dead beef\n'});
+ assert.equal(closedKeyPacket(dump([0,0,0,2,0x65,1]),'h264'),true);
+ assert.equal(closedKeyPacket(dump([0,0,0,2,0x41,1]),'h264'),false);
+ assert.equal(closedKeyPacket(dump([0,0,0,2,0x26,1]),'hevc'),true);
+ assert.equal(closedKeyPacket(dump([0,0,0,2,0x2a,1]),'hevc'),false);
+ assert.equal(closedKeyPacket(dump([0,0,0,1,0x67,2,0,0,1,0x65,1]),'h264'),true);
+ assert.equal(closedKeyPacket(dump([0,0,1,0x2a,1]),'hevc'),false);
+ assert.equal(closedKeyPacket({},'hevc'),false);
+ assert.equal(closedKeyPacket({},'mjpeg'),true);
 });

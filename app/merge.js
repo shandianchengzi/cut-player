@@ -38,7 +38,7 @@ $('mergeForm').onsubmit=async e=>{
  for(const id of ['mergeAll','mergeNone','mergeName'])$(id).disabled=true;renderMergeRows();
  try{
   const result=await window.desktop.mergeSegments(request);
-  const message=result.canceled?'已取消合并':'已无损合并 '+result.count+' 个片段 · '+fileSize(result.bytes)+'\n实际时长 '+exportDuration(result.duration)+' / 选定时长 '+exportDuration(result.expectedDuration)+'（差值 '+(result.duration-result.expectedDuration>=0?'+':'')+(result.duration-result.expectedDuration).toFixed(3)+' 秒）\n文件：'+result.output;
+  const message=result.canceled?'已取消合并':'已无损合并 '+result.count+' 个片段 · '+fileSize(result.bytes)+'\n实际时长 '+exportDuration(result.duration)+' / 扩展后时长 '+exportDuration(result.expectedDuration)+'（差值 '+(result.duration-result.expectedDuration>=0?'+':'')+(result.duration-result.expectedDuration).toFixed(3)+' 秒）\n原选定时长 '+exportDuration(result.requestedDuration??result.expectedDuration)+'\n文件：'+result.output;
   $('mergeProgress').textContent=message;say(message);
  }catch(e){$('mergeErrors').textContent=e.message;$('mergeProgress').textContent='合并未完成';say(e.message);}
  finally{mergeBusy=exporting=false;renderTabs();$('export').disabled=tabBusy;$('mergeStop').hidden=true;for(const id of ['mergeAll','mergeNone','mergeName'])$(id).disabled=false;renderMergeRows();}

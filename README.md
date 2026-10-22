@@ -1,6 +1,6 @@
 # Cut Player
 
-Windows 本地视频时间记录与无损分段工具。当前发布版本：**v1.5.29**。
+Windows 本地视频时间记录与无损分段工具。当前发布版本：**v1.5.30**。
 
 [介绍与使用方法](https://shandianchengzi.github.io/cut-player/) · [开发故事与发布博客](docs/CUT_PLAYER_BLOG.md) · [CSDN 正式文章](https://shandianchengzi.blog.csdn.net/article/details/167817483) · [下载最新版](https://github.com/shandianchengzi/cut-player/releases/latest) · [备用下载](https://shandianchengzi.github.io/cut-player/updates/) · [版本记录](CHANGELOG.md)
 
@@ -117,3 +117,5 @@ Android FFmpeg 按 LGPL 2.1+ 发布，对应原始源码、构建脚本及配置
 点击「切割」旁的「合并片段」，面板列出所有已打开视频按当前断点划分的片段。勾选片段，用 ↑ / ↓ 调整顺序，输入输出名称后选择保存位置。默认名称为「【合并】第一个已选片段的名称」，手动改名后保留输入。合并使用 concat 的 inpoint / outpoint 和 -c copy 直接读取源视频，只生成最终文件；同源连续相邻片段自动合成一个读取区间，减少接缝。
 
 合并前检查轨道、编码、时间基及解码参数；不兼容时停止，不自动转码。原视频禁止覆盖，已有输出需确认。切点受关键帧限制，可能出现切点附近的额外帧和接缝时间偏差；完成后显示实际时长与所选时长差值。关闭面板、打开其他视频不改变已开始任务的片段快照；可停止合并，部分输出保留，临时文本清单自动清理。
+
+合并片段默认保留全部所选内容：开始向前、结束向后扩展到可独立解码的关键帧，音频跟随同一范围；连续相邻片段整体读取，界面显示原选定、扩展后及实际时长。
