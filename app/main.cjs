@@ -79,13 +79,25 @@ app.whenReady().then(()=>{if(!primary)return;
   logExport('开始切割 · 版本 '+app.getVersion()+' · 源文件 '+exportInput);
   try{
    exportUrl=await exportSource.select(exportInput);
-   const {duration:sourceDuration,audioCodec}=parseSourceInfo(await run(sourceInfoArgs(exportUrl),false,undefined,ffprobe));const plan=parsePlan(text,sourceDuration);const audio=options.audio??state.audio;
+   const {duration:sourceDuration,audioCodec}=parseSourceInfo(await run(sourceInfoArgs(exportUrl),false,undefined,ffprobe));const audioOnly=options.audioOnly===true;const plan=audioOnly?[]:parsePlan(text,sourceDuration);const audio=options.audio??state.audio;
    let parent=options.folder||process.env.CUT_PLAYER_TEST_OUTPUT;
    if(!parent){const choice=await dialog.showOpenDialog(win,{title:'选择片段输出目录',properties:['openDirectory','createDirectory']});if(choice.canceled)return {canceled:true};parent=choice.filePaths[0];}
    if(cancelRequested)throw Error('已停止切割');folder=parent;
    const ext=path.extname(exportInput).toLowerCase()||'.mp4';let audioCount=0,videoBytes=0,videoDuration=0;const sourceBytes=fs.statSync(exportInput).size;const size=n=>n>=1073741824?(n/1073741824).toFixed(2)+' GB':(n/1048576).toFixed(2)+' MB';
    const time=n=>{const ms=Math.round(n*1000);return String(Math.floor(ms/3600000)).padStart(2,'0')+':'+String(Math.floor(ms/60000)%60).padStart(2,'0')+':'+String(Math.floor(ms/1000)%60).padStart(2,'0')+'.'+String(ms%1000).padStart(3,'0');};
    const durationStatus=current=>' · 已导出视频总时长 '+time(videoDuration+current)+' / 总时长 '+time(sourceDuration);
+   if(audioOnly){
+    if(!audioCodec)throw Error('源视频没有音频轨道，无法导出原始音频');
+    const audioOutput=path.join(folder,path.parse(exportInput).name+(audioCodec==='aac'?'.aac':'.mka')),key=path.resolve(audioOutput).toLowerCase();
+    if(key===path.resolve(exportInput).toLowerCase())throw Error('输出文件不能覆盖源视频');
+    if(liveTargets.has(key)||fs.existsSync(audioOutput))throw Error('输出名称冲突或文件已存在：'+path.basename(audioOutput));
+    liveTargets.add(key);claimed.push(key);requireFile(exportInput);
+    progress('正在导出完整原始音频：'+path.basename(exportInput));
+    await run(audioArgs(exportUrl,audioOutput),false,data=>progress('正在导出完整原始音频：'+path.basename(exportInput)+' · '+Math.min(99.9,data.seconds/sourceDuration*100).toFixed(1)+'% · '+size(data.bytes)));
+    const audioBytes=fs.statSync(audioOutput).size;
+    logExport('原始音频导出完成 · '+audioOutput+' · '+audioBytes+' 字节');
+    return {folder,count:0,audioCount:1,audioOnly:true,audioBytes,sourceDuration};
+   }
    const targets=plan.flatMap(part=>[path.join(folder,part.name+ext),...(audio&&audioCodec?[path.join(folder,part.name+(audioCodec==='aac'?'.aac':'.mka'))]:[])]);
    if(targets.some(target=>path.resolve(target).toLowerCase()===path.resolve(exportInput).toLowerCase()))throw Error('输出文件与源视频重名，请修改 names 或选择其他目录');
    for(const target of targets){const key=path.resolve(target).toLowerCase();if(liveTargets.has(key)||(!options.batch&&queue.jobs.some(j=>['waiting','running'].includes(j.status)&&j.targets.includes(key))))throw Error('输出名称与队列中的任务冲突：'+path.basename(target));}
@@ -135,7 +147,7 @@ app.whenReady().then(()=>{if(!primary)return;
  const {parseBatch}=require('./batch-plan.cjs');
  let previousCpu;
  function capacity(){const os=require('node:os'),cores=os.cpus();const current=cores.reduce((s,c)=>({idle:s.idle+c.times.idle,total:s.total+Object.values(c.times).reduce((a,b)=>a+b,0)}),{idle:0,total:0});const delta=previousCpu?current.total-previousCpu.total:0;const load=delta>0?1-(current.idle-previousCpu.idle)/delta:0;previousCpu=current;return Math.max(0,autoConcurrency({load})-(busy?1:0));}
- const queue=new TaskQueue((job,progress)=>executeExport(job.text,job.path,{folder:job.folder,audio:job.audio,batch:true,signal:job.controller.signal,progress}),jobs=>{if(!win.isDestroyed())win.webContents.send('queue-update',jobs);},capacity);
+ const queue=new TaskQueue((job,progress)=>executeExport(job.text,job.path,{folder:job.folder,audio:job.audio,audioOnly:job.audioOnly,batch:true,signal:job.controller.signal,progress}),jobs=>{if(!win.isDestroyed())win.webContents.send('queue-update',jobs);},capacity);
  const imported=new Map();
  function probeFile(file){return new Promise((resolve,reject)=>{const child=spawn(ffprobe,['-v','error','-show_entries','format=duration','-of','default=noprint_wrappers=1:nokey=1',file],{windowsHide:true,shell:false});let output='';const timer=setTimeout(()=>{child.kill();reject(Error('读取时长超时'));},30000);child.stdout.on('data',b=>output=(output+b).slice(-8192));child.once('error',e=>{clearTimeout(timer);reject(e);});child.once('close',code=>{clearTimeout(timer);const duration=Number(output.trim());if(code!==0||!Number.isFinite(duration)||duration<=0)reject(Error('无法读取视频时长'));else resolve(duration);});});}
  handle('queue-import',async files=>{if(!Array.isArray(files)||!files.length||files.length>200)throw Error('请选择 1–200 个视频');const result=[];for(const file of files){try{if(typeof file!=='string')throw Error('视频路径无效');requireFile(file);const resolved=path.resolve(file),duration=await probeFile(resolved),info={path:resolved,name:path.basename(resolved),duration};imported.set(resolved,info);result.push(info);}catch(e){result.push({path:typeof file==='string'?file:'',name:path.basename(String(file)),error:e.message});}}return result;});
@@ -145,12 +157,12 @@ app.whenReady().then(()=>{if(!primary)return;
  handle('queue-add',async request=>{
   if(!request||!Array.isArray(request.paths)||request.paths.length<1||request.paths.length>200)throw Error('请选择视频');
   const files=request.paths.map(p=>{const info=imported.get(p);if(!info)throw Error('请重新导入视频');requireFile(p);return info;});
-  const checked=parseBatch(request.text,files,parsePlan);if(checked.errors.length)throw Error(checked.errors.map(e=>'第 '+e.line+' 行：'+e.message).join('\n'));
-  const audio=!!request.audio;let folder=process.env.CUT_PLAYER_TEST_OUTPUT;
-  if(!folder){const choice=await dialog.showOpenDialog(win,{title:'选择批量切割输出目录',properties:['openDirectory','createDirectory']});if(choice.canceled)return {canceled:true};folder=choice.filePaths[0];}
+  const audioOnly=request.audioOnly===true;const checked=audioOnly?{plans:files.map(f=>({path:f.path,text:''})),errors:[]}:parseBatch(request.text,files,parsePlan);if(checked.errors.length)throw Error(checked.errors.map(e=>'第 '+e.line+' 行：'+e.message).join('\n'));
+  const audio=audioOnly||!!request.audio;let folder=process.env.CUT_PLAYER_TEST_OUTPUT;
+  if(!folder){const choice=await dialog.showOpenDialog(win,{title:audioOnly?'选择原始音频输出目录':'选择批量切割输出目录',properties:['openDirectory','createDirectory']});if(choice.canceled)return {canceled:true};folder=choice.filePaths[0];}
   // Reserve names for both video and possible audio outputs before any worker starts.
   const reserved=new Set(liveTargets);for(const job of queue.jobs.filter(j=>['waiting','running'].includes(j.status)))for(const target of job.targets)reserved.add(target);
-  const items=checked.plans.map((p,i)=>{const ext=path.extname(p.path).toLowerCase()||'.mp4',targets=[];for(const part of p.plan){for(const suffix of [ext,...(audio?['.aac','.mka']:[])]){const target=path.resolve(folder,part.name+suffix).toLowerCase();if(reserved.has(target)||fs.existsSync(path.join(folder,part.name+suffix)))throw Error('第 '+(i*2+2)+' 行：输出名称冲突或文件已存在：'+part.name+suffix);if(files.some(f=>path.resolve(f.path).toLowerCase()===target))throw Error('输出文件不能覆盖源视频');reserved.add(target);targets.push(target);}}return {...p,name:files[i].name,folder,audio,targets};});
+  const items=checked.plans.map((p,i)=>{const ext=path.extname(p.path).toLowerCase()||'.mp4',targets=[];for(const part of (audioOnly?[{name:path.parse(p.path).name}]:p.plan)){for(const suffix of (audioOnly?['.aac','.mka']:[ext,...(audio?['.aac','.mka']:[])])){const target=path.resolve(folder,part.name+suffix).toLowerCase();if(reserved.has(target)||fs.existsSync(path.join(folder,part.name+suffix)))throw Error((audioOnly?'':('第 '+(i*2+2)+' 行：'))+'输出名称冲突或文件已存在：'+part.name+suffix);if(files.some(f=>path.resolve(f.path).toLowerCase()===target))throw Error('输出文件不能覆盖源视频');reserved.add(target);targets.push(target);}}return {...p,name:files[i].name,folder,audio,audioOnly,targets};});
   return {ids:queue.add(items)};
  });
  win.on('close',e=>{if(busy||queue.busy){e.preventDefault();dialog.showMessageBox(win,{type:'info',message:'正在导出，请等待任务结束后关闭。'});}});
