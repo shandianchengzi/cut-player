@@ -66,7 +66,7 @@ function createMergeEngine({ffmpeg,ffprobe,tempDir=os.tmpdir()}){
  // Resolve whole read ranges before seeking: adjacent original segments stay one range.
  // PTS chooses outward boundaries; the video outpoint uses DTS so B-frame preroll
  // cannot overlap the next range. Audio uses the same PTS interval in a separate list.
- async function align(parts,info,signal,progress){
+ async function align(parts,info,signal,progress,strict=false){
   const ranges=consecutiveRanges(parts),resolvers=new Map();
   for(const data of info.values()){
    const video=data.meta.streams.filter(s=>s.codec_type==='video');
@@ -113,7 +113,8 @@ function createMergeEngine({ffmpeg,ffprobe,tempDir=os.tmpdir()}){
    resolvers.set(data.url,{before,after,duration});
   }
   for(const p of ranges){
-   const r=resolvers.get(p.url),start=await r.before(p.start),end=await r.after(p.end);
+   const requestedStart=p.start,requestedEnd=p.end,r=resolvers.get(p.url),start=await r.before(p.start),end=await r.after(p.end);
+   if(strict&&(Math.abs(start.pts-requestedStart)>.0006||(end&&Math.abs(end.pts-requestedEnd)>.0006)||(!end&&requestedEnd<r.duration-.0006)))throw Error('选定范围包含不能独立解码的断点，请回到“无损关键帧”模式重新记录');
    p.start=start.pts;p.end=end?end.pts:r.duration;p.outpoint=end?end.dts:r.duration;
    if(p.end<=p.start)throw Error('无法确定完整的合并范围，请检查源视频');
   }
@@ -154,7 +155,7 @@ function createMergeEngine({ffmpeg,ffprobe,tempDir=os.tmpdir()}){
     const data=info.get(key);if(part.end>data.meta.duration+.001)throw Error('片段已超出源视频时长：'+path.basename(file));
     parts.push({...part,file,url:data.url});
    }
-   check();const ranges=await align(parts,info,signal,progress);const first=parts[0],ext=path.extname(first.file).toLowerCase();if(!extensions.has(ext))throw Error('暂不支持该输出容器：'+ext);
+   check();const ranges=await align(parts,info,signal,progress,request.losslessKeyframes===true);const first=parts[0],ext=path.extname(first.file).toLowerCase();if(!extensions.has(ext))throw Error('暂不支持该输出容器：'+ext);
    output=await selectOutput({name,ext});if(!output)return {canceled:true};
    output=path.resolve(output);if(!path.extname(output))output+=ext;
    if(!extensions.has(path.extname(output).toLowerCase()))throw Error('输出扩展名不受支持');

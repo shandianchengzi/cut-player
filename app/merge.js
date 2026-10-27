@@ -33,7 +33,7 @@ window.desktop.onMergeProgress(text=>{$('mergeProgress').textContent=text;say(te
 $('mergeStop').onclick=async()=>{if(!mergeBusy)return;$('mergeStop').disabled=true;try{await window.desktop.cancelExport();}catch(e){$('mergeErrors').textContent=e.message;$('mergeStop').disabled=false;}};
 $('mergeForm').onsubmit=async e=>{
  e.preventDefault();if(mergeBusy||exporting)return;const chosen=selectedMergeRows();if(!chosen.length)return;
- const request={parts:chosen.map(({file,start,end,name})=>({file,start,end,name})),name:$('mergeName').value,protectFiles:[...mergeProtected]};
+ const request={parts:chosen.map(({file,start,end,name})=>({file,start,end,name})),name:$('mergeName').value,protectFiles:[...mergeProtected],losslessKeyframes:$('fine').checked};
  mergeBusy=exporting=true;renderTabs();$('export').disabled=true;$('mergeErrors').textContent='';$('mergeProgress').textContent='准备无损合并…';$('mergeStop').hidden=false;$('mergeStop').disabled=false;
  for(const id of ['mergeAll','mergeNone','mergeName'])$(id).disabled=true;renderMergeRows();
  try{

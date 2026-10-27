@@ -1,6 +1,6 @@
 const {app,BrowserWindow,ipcMain,clipboard,dialog}=require('electron');
 const path=require('node:path'),fs=require('node:fs'),{spawn}=require('node:child_process');
-const {validate,upgradeConfig}=require('./model.cjs'),{parsePlan,videoArgs,audioArgs}=require('./export.cjs');
+const {validate,upgradeConfig}=require('./model.cjs'),{parsePlan,videoArgs,audioArgs,validateKeyframePlan}=require('./export.cjs');
 if(process.env.CUT_PLAYER_TEST_PROFILE)app.setPath('userData',process.env.CUT_PLAYER_TEST_PROFILE);
 let analysisQueue,mainWindow;
 const {AnalysisQueue}=require('./analysis-queue.cjs');
@@ -80,6 +80,10 @@ app.whenReady().then(()=>{if(!primary)return;
   try{
    exportUrl=await exportSource.select(exportInput);
    const {duration:sourceDuration,audioCodec}=parseSourceInfo(await run(sourceInfoArgs(exportUrl),false,undefined,ffprobe));const audioOnly=options.audioOnly===true;const plan=audioOnly?[]:parsePlan(text,sourceDuration);const audio=options.audio??state.audio;
+   if(options.keyframes!==undefined){
+    if(!Array.isArray(options.keyframes)||options.keyframes.length>2000000||options.keyframes.some(t=>!Number.isFinite(t)||t<0))throw Error('关键帧时间轴无效，请重新打开视频');
+    validateKeyframePlan(plan,options.keyframes);
+   }
    let parent=options.folder||process.env.CUT_PLAYER_TEST_OUTPUT;
    if(!parent){const choice=await dialog.showOpenDialog(win,{title:'选择片段输出目录',properties:['openDirectory','createDirectory']});if(choice.canceled)return {canceled:true};parent=choice.filePaths[0];}
    if(cancelRequested)throw Error('已停止切割');folder=parent;
@@ -121,7 +125,7 @@ app.whenReady().then(()=>{if(!primary)return;
   }catch(e){logExport('切割终止：'+e.message);try{requireFile(exportInput);}catch(missing){e=missing;}if(folder)e.message+='\n已完成或未完成的文件保留在：'+folder;e.message+='\n诊断日志：'+exportLog;throw e;}finally{for(const target of claimed)liveTargets.delete(target);exportSource.close();options.signal?.removeEventListener('abort',abort);}
  }
  let legacyController;
- handle('export-segments',async(text,file)=>{if(busy)throw Error('正在导出');busy=true;legacyController=new AbortController();try{return await executeExport(text,file,{signal:legacyController.signal});}finally{busy=false;legacyController=undefined;queue.pump();}});
+  handle('export-segments',async(text,file,keyframes)=>{if(busy)throw Error('正在导出');busy=true;legacyController=new AbortController();try{return await executeExport(text,file,{signal:legacyController.signal,keyframes});}finally{busy=false;legacyController=undefined;queue.pump();}});
 
  const merger=require('./merge.cjs').createMergeEngine({ffmpeg,ffprobe,tempDir:app.getPath('temp')});
  handle('merge-list',inputs=>merger.list(inputs));

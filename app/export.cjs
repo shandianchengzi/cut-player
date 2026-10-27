@@ -15,5 +15,11 @@ function parsePlan(text,duration){
 }
 function videoArgs(input,part,output){return ['-hide_banner','-nostdin','-y','-i',input,'-ss',String(part.start),'-to',String(part.end),'-map','0:v?','-map','0:a?','-c','copy',output];}
 function audioArgs(input,output){return ['-hide_banner','-nostdin','-y','-i',input,'-map','0:a:0','-c','copy','-vn',output];}
-if(typeof module!=='undefined')module.exports={parsePlan,videoArgs,audioArgs};else root.parsePlan=parsePlan;
+function validateKeyframePlan(plan,keyframes,tolerance=.0006){
+ if(!Array.isArray(keyframes)||!keyframes.length)throw Error('关键帧时间轴尚未准备好，请等待分析完成');
+ const points=plan.slice(1).map(part=>part.start);
+ for(const point of points)if(!keyframes.some(key=>Math.abs(key-point)<=tolerance))throw Error('断点 '+point.toFixed(3)+' 秒不是无损关键帧，请在“无损关键帧”模式下重新定位并记录');
+ return true;
+}
+if(typeof module!=='undefined')module.exports={parsePlan,videoArgs,audioArgs,validateKeyframePlan};else Object.assign(root,{parsePlan,validateKeyframePlan});
 })(globalThis);

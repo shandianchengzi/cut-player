@@ -22,6 +22,6 @@ contextBridge.exposeInMainWorld('desktop',{
  saveConfig:patch=>ipcRenderer.invoke('save-config',patch),
  setInput:file=>ipcRenderer.invoke('set-input',typeof file==='string'?file:webUtils.getPathForFile(file)),
  cancelExport:()=>ipcRenderer.invoke('cancel-export'),
- exportSegments:(text,file)=>ipcRenderer.invoke('export-segments',text,file),
+ exportSegments:(text,file,keyframes)=>ipcRenderer.invoke('export-segments',text,file,keyframes),
  onProgress:fn=>ipcRenderer.on('export-progress',(_e,text)=>fn(text))
 });
